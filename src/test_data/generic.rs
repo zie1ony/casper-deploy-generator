@@ -3,13 +3,8 @@ use std::{
     fmt::Debug,
 };
 
-use casper_execution_engine::core::engine_state::ExecutableDeployItem;
 use casper_types::{
-    account::{AccountHash, ACCOUNT_HASH_LENGTH},
-    bytesrepr::{self, Bytes, ToBytes},
-    AccessRights, AsymmetricType, CLType, CLTyped, CLValue, DeployHash, EraId, Key, NamedArg,
-    PublicKey, RuntimeArgs, TransferAddr, URef, DEPLOY_HASH_LENGTH, KEY_DICTIONARY_LENGTH,
-    KEY_HASH_LENGTH, TRANSFER_ADDR_LENGTH, U128, U256, U512, UREF_ADDR_LENGTH,
+    account::{AccountHash, ACCOUNT_HASH_LENGTH}, bytesrepr::{self, Bytes, ToBytes}, AccessRights, AsymmetricType, CLType, CLTyped, CLValue, DeployHash, Digest, EraId, ExecutableDeployItem, Key, NamedArg, PublicKey, RuntimeArgs, TransferAddr, URef, KEY_DICTIONARY_LENGTH, KEY_HASH_LENGTH, TRANSFER_ADDR_LENGTH, U128, U256, U512, UREF_ADDR_LENGTH
 };
 use rand::{prelude::SliceRandom, Rng};
 use strum::{EnumIter, IntoEnumIterator};
@@ -398,7 +393,7 @@ fn sample_keys() -> Vec<Key> {
     let hash_key = casper_types::Key::Hash([1u8; KEY_HASH_LENGTH]);
     let balance_key = casper_types::Key::Balance([1u8; UREF_ADDR_LENGTH]);
     let bid_key = casper_types::Key::Bid(AccountHash::new([1u8; ACCOUNT_HASH_LENGTH]));
-    let deploy_info_key = casper_types::Key::DeployInfo(DeployHash::new([1u8; DEPLOY_HASH_LENGTH]));
+    let deploy_info_key = casper_types::Key::DeployInfo(DeployHash::new(Digest::hash([1u8; DeployHash::LENGTH])));
     let dictionary_key = casper_types::Key::Dictionary([1u8; KEY_DICTIONARY_LENGTH]);
     let era_info_key = casper_types::Key::EraInfo(EraId::new(0));
     let transfer_key = casper_types::Key::Transfer(TransferAddr::new([1u8; TRANSFER_ADDR_LENGTH]));
@@ -407,10 +402,25 @@ fn sample_keys() -> Vec<Key> {
         AccessRights::READ_ADD_WRITE,
     ));
     let withdraw_key = casper_types::Key::Withdraw(AccountHash::new([1u8; ACCOUNT_HASH_LENGTH]));
-    let system_registry_key = casper_types::Key::SystemContractRegistry;
+    let system_registry_key = casper_types::Key::SystemEntityRegistry;
     let chainspec_registry_key = casper_types::Key::ChainspecRegistry;
-    let checksum_registry_key = casper_types::Key::ChainspecRegistry;
+    let checksum_registry_key = casper_types::Key::ChecksumRegistry;
 
+    /*  TODO: The following aren't covered. Investigate.
+        Key::EraSummary
+        Key::Unbond(account_hash)
+        Key::BidAddr(bid_addr)
+        Key::SmartContract(_)
+        Key::AddressableEntity(entity_addr)
+        Key::ByteCode(byte_code_addr)
+        Key::Message(message_addr)
+        Key::NamedKey(named_key_addr)
+        Key::BlockGlobal(block_global_addr)
+        Key::BalanceHold(balance_hold_addr)
+        Key::EntryPoint(entry_point_addr)
+        Key::State(entity_addr)
+    */
+    
     vec![
         account_key,
         hash_key,

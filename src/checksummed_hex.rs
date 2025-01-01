@@ -1,4 +1,4 @@
-use casper_types::blake2b;
+use crate::utils::blake2b;
 
 pub fn encode<T: AsRef<[u8]>>(input: T) -> String {
     if input.as_ref().len() > SMALL_BYTES_COUNT {
@@ -55,7 +55,7 @@ fn encode_iter<'a, T: 'a + AsRef<[u8]>>(input: &'a T) -> impl Iterator<Item = ch
 
 #[cfg(test)]
 mod tests {
-    use casper_hashing::Digest;
+    use casper_types::Digest;
 
     #[test]
     fn tmp() {

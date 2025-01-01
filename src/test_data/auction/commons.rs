@@ -1,7 +1,6 @@
 use crate::sample::Sample;
 use crate::test_data::commons::{prepend_label, sample_executables, sample_module_bytes};
-use casper_execution_engine::core::engine_state::ExecutableDeployItem;
-use casper_types::{runtime_args, AsymmetricType, PublicKey, RuntimeArgs, U512};
+use casper_types::{runtime_args, AsymmetricType, ExecutableDeployItem, PublicKey, RuntimeArgs, U512};
 
 /// Generates a valid auction transaction.
 pub(crate) fn valid(entrypoint: &str, ra: Vec<RuntimeArgs>) -> Vec<Sample<ExecutableDeployItem>> {

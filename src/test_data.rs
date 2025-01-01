@@ -1,10 +1,7 @@
 use std::str::FromStr;
 
-use casper_execution_engine::core::engine_state::ExecutableDeployItem;
-use casper_node::types::{Deploy, DeployHash};
 use casper_types::{
-    account::AccountHash, AccessRights, AsymmetricType, CLValue, Key, PublicKey, RuntimeArgs,
-    SecretKey, TimeDiff, Timestamp, URef, U512,
+    account::AccountHash, AccessRights, AsymmetricType, CLValue, Deploy, DeployHash, DeployHeader, Digest, ExecutableDeployItem, Key, PublicKey, RuntimeArgs, SecretKey, TimeDiff, Timestamp, URef, U512
 };
 use rand::{prelude::*, Rng};
 
@@ -21,6 +18,7 @@ mod native_transfer;
 pub(crate) mod sign_message;
 mod system_payment;
 
+// TODO: Investigate these values
 // From the chainspec.
 // 1 minute.
 const MIN_TTL: TimeDiff = TimeDiff::from_seconds(60);
@@ -185,17 +183,18 @@ fn make_deploy_sample(
     let (payment_label, payment, payment_validity) = payment.destructure();
     let (session_label, session, session_validity) = session.destructure();
 
-    let deploy = Deploy::new(
+    let header = DeployHeader::new(
+        PublicKey::from(&main_key[0]),
         Timestamp::from_str("2021-05-04T14:20:35.104Z").unwrap(),
         ttl,
         2,
+        Digest::hash([1u8; 32]),
         dependencies,
-        String::from("mainnet"),
-        payment,
-        session,
-        &main_key[0],
-        None,
+        "mainnet".into(),
     );
+
+    let hash = DeployHash::new(Digest::hash([1u8; 32]));
+    let deploy = Deploy::new(hash, header, payment, session);
 
     let mut sample = Sample::new(session_label, deploy, session_validity && payment_validity);
     sample.add_label(payment_label);

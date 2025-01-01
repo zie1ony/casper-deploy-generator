@@ -1,7 +1,6 @@
 use std::{fmt::Display, rc::Rc};
 
-use casper_node::types::Deploy;
-use casper_types::bytesrepr::ToBytes;
+use casper_types::{bytesrepr::ToBytes, Deploy};
 
 use serde::{Deserialize, Serialize};
 

@@ -1,8 +1,4 @@
-use casper_execution_engine::core::engine_state::ExecutableDeployItem;
-use casper_types::bytesrepr::Bytes;
-use casper_types::{
-    ContractHash, ContractPackageHash, ContractVersion, RuntimeArgs, UREF_ADDR_LENGTH,
-};
+use casper_types::{bytesrepr::Bytes, contracts::{ContractHash, ContractPackageHash, ContractVersion}, ExecutableDeployItem, RuntimeArgs};
 
 use crate::sample::Sample;
 
@@ -92,7 +88,7 @@ pub(crate) fn prepend_label(
     Sample::new(label, executable, valid)
 }
 
-pub(crate) const UREF_ADDR: [u8; UREF_ADDR_LENGTH] = [
+pub(crate) const UREF_ADDR: [u8; 32] = [
     74, 207, 207, 108, 104, 76, 88, 202, 246, 179, 41, 110, 58, 151, 196, 160, 74, 250, 247, 123,
     184, 117, 202, 154, 64, 164, 93, 178, 84, 233, 74, 117,
 ];

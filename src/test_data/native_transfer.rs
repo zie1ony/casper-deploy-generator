@@ -1,5 +1,4 @@
-use casper_execution_engine::core::engine_state::ExecutableDeployItem;
-use casper_types::{runtime_args, AccessRights, RuntimeArgs, URef, U512};
+use casper_types::{runtime_args, AccessRights, ExecutableDeployItem, RuntimeArgs, URef, U512};
 
 use crate::{sample::Sample, test_data::TransferTarget};
 

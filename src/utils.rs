@@ -1,9 +1,29 @@
 use casper_types::{
-    bytesrepr::FromBytes, CLType, CLValue, Key, PublicKey, URef, ED25519_TAG, SECP256K1_TAG,
+    bytesrepr::{FromBytes, ToBytes}, CLType, CLValue, Key, PublicKey, URef, ED25519_TAG, SECP256K1_TAG,
 };
 use itertools::Itertools;
+use blake2::{
+    digest::{Update, VariableOutput},
+    Blake2bVar,
+};
 
 use crate::checksummed_hex;
+
+pub(crate) const DIGEST_LENGTH: usize = 32;
+
+/// Compute the blake2b hash over some byte data
+pub(crate) fn blake2b<T: AsRef<[u8]>>(data: T) -> [u8; DIGEST_LENGTH] {
+    let mut result = [0; DIGEST_LENGTH];
+    // NOTE: Assumed safe as `BLAKE2B_DIGEST_LENGTH` is a valid value for a hasher
+    let mut hasher = Blake2bVar::new(DIGEST_LENGTH).expect("should create hasher");
+
+    hasher.update(data.as_ref());
+
+    // NOTE: This should never fail, because result is exactly DIGEST_LENGTH long
+    hasher.finalize_variable(&mut result).ok();
+
+    result
+}
 
 /// Turn JSON representation into a string.
 fn serde_value_to_str(value: &serde_json::Value) -> String {
@@ -24,6 +44,7 @@ fn drop_key_type_prefix(cl_in: String) -> String {
     let parsed_key = Key::from_formatted_str(&cl_in);
     match parsed_key {
         Ok(key) => {
+            // TODO: Verify these are correct
             let prefix = match key {
                 Key::Account(_) => "account-hash-",
                 Key::Hash(_) => "hash-",
@@ -42,11 +63,22 @@ fn drop_key_type_prefix(cl_in: String) -> String {
                         .collect();
                 }
                 Key::Dictionary(_) => "dictionary-",
-                Key::SystemContractRegistry => "system-contract-registry-",
+                Key::SystemEntityRegistry => "system-entity-registry-",
                 Key::Unbond(_) => "ubond-",
                 Key::ChainspecRegistry => "chainspec-registry",
                 Key::ChecksumRegistry => "checksum-registry",
                 Key::EraSummary => "era-summary-",
+                Key::BidAddr(_) => "bid-addr-",
+                Key::SmartContract(_) => "package-",
+                Key::AddressableEntity(entity_addr) => todo!(),
+                Key::ByteCode(byte_code_addr) => todo!(),
+                Key::Message(message_addr) => todo!(),
+                Key::NamedKey(named_key_addr) => todo!(),
+                Key::BlockGlobal(block_global_addr) => todo!(),
+                Key::BalanceHold(balance_hold_addr) => todo!(),
+                Key::EntryPoint(entry_point_addr) => todo!(),
+                Key::State(entity_addr) => todo!(),
+                
             };
 
             let stripped_prefix = cl_in.chars().skip(prefix.len()).collect();
@@ -77,7 +109,7 @@ pub(crate) fn cl_value_to_string(cl_in: &CLValue) -> String {
                 Key::URef(uref) => checksummed_hex::encode(uref.addr()),
                 Key::Hash(addr) => checksummed_hex::encode(addr),
                 Key::Transfer(addr) => checksummed_hex::encode(addr.value()),
-                Key::DeployInfo(deploy_hash) => checksummed_hex::encode(deploy_hash.as_bytes()),
+                Key::DeployInfo(deploy_hash) => checksummed_hex::encode(deploy_hash.to_bytes().expect("DeployHash should serialize")),
                 Key::Balance(uref_addr) => checksummed_hex::encode(uref_addr),
                 Key::Dictionary(dict_addr) => checksummed_hex::encode(dict_addr),
                 Key::Account(account_hash)
@@ -85,10 +117,20 @@ pub(crate) fn cl_value_to_string(cl_in: &CLValue) -> String {
                 | Key::Withdraw(account_hash)
                 | Key::Bid(account_hash) => checksummed_hex::encode(account_hash),
                 Key::EraInfo(_)
-                | Key::SystemContractRegistry
+                | Key::SystemEntityRegistry
                 | Key::ChainspecRegistry
                 | Key::ChecksumRegistry
                 | Key::EraSummary => parse_as_default_json(cl_in),
+                Key::BidAddr(bid_addr) => todo!(),
+                Key::SmartContract(_) => todo!(),
+                Key::AddressableEntity(entity_addr) => todo!(),
+                Key::ByteCode(byte_code_addr) => todo!(),
+                Key::Message(message_addr) => todo!(),
+                Key::NamedKey(named_key_addr) => todo!(),
+                Key::BlockGlobal(block_global_addr) => todo!(),
+                Key::BalanceHold(balance_hold_addr) => todo!(),
+                Key::EntryPoint(entry_point_addr) => todo!(),
+                Key::State(entity_addr) => todo!(),
             }
         }
         CLType::URef => {

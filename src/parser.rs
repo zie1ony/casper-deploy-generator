@@ -3,7 +3,7 @@ mod deploy;
 mod runtime_args;
 mod utils;
 
-use casper_node::types::Deploy;
+use casper_types::Deploy;
 
 use crate::{
     checksummed_hex,

@@ -1,5 +1,4 @@
-use casper_execution_engine::core::engine_state::ExecutableDeployItem;
-use casper_types::{bytesrepr::Bytes, runtime_args, RuntimeArgs, U512};
+use casper_types::{bytesrepr::Bytes, runtime_args, ExecutableDeployItem, U512};
 
 use crate::sample::Sample;
 
