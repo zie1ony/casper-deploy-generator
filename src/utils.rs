@@ -1,5 +1,5 @@
 use casper_types::{
-    bytesrepr::{FromBytes, ToBytes}, CLType, CLValue, Key, PublicKey, URef, ED25519_TAG, SECP256K1_TAG,
+    bytesrepr::{FromBytes, ToBytes}, BlockGlobalAddr, CLType, CLValue, Key, PublicKey, URef, ED25519_TAG, SECP256K1_TAG
 };
 use itertools::Itertools;
 use blake2::{
@@ -70,15 +70,17 @@ fn drop_key_type_prefix(cl_in: String) -> String {
                 Key::EraSummary => "era-summary-",
                 Key::BidAddr(_) => "bid-addr-",
                 Key::SmartContract(_) => "package-",
-                Key::AddressableEntity(entity_addr) => todo!(),
-                Key::ByteCode(byte_code_addr) => todo!(),
-                Key::Message(message_addr) => todo!(),
-                Key::NamedKey(named_key_addr) => todo!(),
-                Key::BlockGlobal(block_global_addr) => todo!(),
-                Key::BalanceHold(balance_hold_addr) => todo!(),
-                Key::EntryPoint(entry_point_addr) => todo!(),
-                Key::State(entity_addr) => todo!(),
-                
+                Key::BlockGlobal(addr) => match addr {
+                    BlockGlobalAddr::BlockTime => "block-time-",
+                    BlockGlobalAddr::MessageCount => "block-message-count-",
+                },
+                Key::BalanceHold(_) => "balance-hold-",
+                Key::State(_) => "state-",
+                Key::AddressableEntity(_) |
+                Key::ByteCode(_) |
+                Key::Message(_) | 
+                Key::NamedKey(_) |
+                Key::EntryPoint(_) => "",
             };
 
             let stripped_prefix = cl_in.chars().skip(prefix.len()).collect();
@@ -121,16 +123,16 @@ pub(crate) fn cl_value_to_string(cl_in: &CLValue) -> String {
                 | Key::ChainspecRegistry
                 | Key::ChecksumRegistry
                 | Key::EraSummary => parse_as_default_json(cl_in),
-                Key::BidAddr(bid_addr) => todo!(),
-                Key::SmartContract(_) => todo!(),
-                Key::AddressableEntity(entity_addr) => todo!(),
-                Key::ByteCode(byte_code_addr) => todo!(),
-                Key::Message(message_addr) => todo!(),
-                Key::NamedKey(named_key_addr) => todo!(),
-                Key::BlockGlobal(block_global_addr) => todo!(),
-                Key::BalanceHold(balance_hold_addr) => todo!(),
-                Key::EntryPoint(entry_point_addr) => todo!(),
-                Key::State(entity_addr) => todo!(),
+                Key::SmartContract(package) => checksummed_hex::encode(package),
+                Key::BidAddr(bid_addr) => checksummed_hex::encode(bid_addr.to_bytes().expect("BidAddr should serialize")),
+                Key::AddressableEntity(entity_addr) => checksummed_hex::encode(entity_addr.to_bytes().expect("Entity should serialize")),
+                Key::ByteCode(byte_code_addr) => checksummed_hex::encode(byte_code_addr.to_bytes().expect("ByteCodeAddr should serialize")),
+                Key::Message(message_addr) => checksummed_hex::encode(message_addr.to_bytes().expect("Message should serialize")),
+                Key::NamedKey(named_key_addr) => checksummed_hex::encode(named_key_addr.to_bytes().expect("NamedKeyAddr should serialize")),
+                Key::BlockGlobal(block_global_addr) => checksummed_hex::encode(block_global_addr.to_bytes().expect("BlockGlobalAddr should serialize")),
+                Key::BalanceHold(balance_hold_addr) => checksummed_hex::encode(balance_hold_addr.to_bytes().expect("BalanceHoldAddr should serialize")),
+                Key::EntryPoint(entry_point_addr) => checksummed_hex::encode(entry_point_addr.to_bytes().expect("EntryPointAddr should serialize")),
+                Key::State(entity_addr) => checksummed_hex::encode(entity_addr.to_bytes().expect("EntityAddr should serialize")),
             }
         }
         CLType::URef => {
