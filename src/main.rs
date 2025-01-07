@@ -25,16 +25,16 @@ fn main() {
     let mut id = 0;
     let mut data: Vec<ZondaxRepr> = vec![];
 
-    for sample_deploy in undelegate_samples(&mut rng)
+    for sample_transaction in undelegate_samples(&mut rng)
         .into_iter()
         .chain(delegate_samples(&mut rng))
         .chain(native_transfer_samples(&mut rng))
         .chain(redelegate_samples(&mut rng))
         .chain(generic_samples(&mut rng))
     {
-        data.push(ledger::deploy_to_json(
+        data.push(ledger::transaction_to_json(
             id,
-            sample_deploy,
+            sample_transaction,
             &limited_ledger_config,
         ));
         id += 1;

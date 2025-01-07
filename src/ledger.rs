@@ -1,6 +1,6 @@
 use std::{fmt::Display, rc::Rc};
 
-use casper_types::{bytesrepr::ToBytes, Deploy};
+use casper_types::{bytesrepr::ToBytes, Deploy, Transaction};
 
 use serde::{Deserialize, Serialize};
 
@@ -86,6 +86,13 @@ struct Ledger {
 }
 
 impl Ledger {
+    fn from_transaction(transaction: Transaction) -> Self {
+        match transaction {
+            Transaction::Deploy(deploy) => Self::from_deploy(deploy),
+            Transaction::V1(_) => unimplemented!(),
+        }
+    }
+
     fn from_deploy(deploy: Deploy) -> Self {
         Ledger {
             ledger_elements: parser::parse_deploy(deploy),
@@ -316,14 +323,14 @@ pub(super) struct ZondaxRepr {
 }
 
 /// Maps `Deploy` structure to the expected JSON representation.
-pub(super) fn deploy_to_json(
+pub(super) fn transaction_to_json(
     index: usize,
-    sample_deploy: Sample<Deploy>,
+    sample_deploy: Sample<Transaction>,
     config: &LimitedLedgerConfig,
 ) -> ZondaxRepr {
     let (name, deploy, valid) = sample_deploy.destructure();
     let blob = hex::encode(deploy.to_bytes().unwrap());
-    let ledger = Ledger::from_deploy(deploy);
+    let ledger = Ledger::from_transaction(deploy);
     let ledger_view = LimitedLedgerView::new(config, ledger);
     let output = ledger_view.regular();
     let output_expert = ledger_view.expert();

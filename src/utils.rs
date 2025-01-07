@@ -44,7 +44,6 @@ fn drop_key_type_prefix(cl_in: String) -> String {
     let parsed_key = Key::from_formatted_str(&cl_in);
     match parsed_key {
         Ok(key) => {
-            // TODO: Verify these are correct
             let prefix = match key {
                 Key::Account(_) => "account-hash-",
                 Key::Hash(_) => "hash-",

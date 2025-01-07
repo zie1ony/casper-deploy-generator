@@ -4,7 +4,7 @@ use std::{
 };
 
 use casper_types::{
-    account::{AccountHash, ACCOUNT_HASH_LENGTH}, bytesrepr::{self, Bytes, ToBytes}, AccessRights, AsymmetricType, CLType, CLTyped, CLValue, DeployHash, Digest, EraId, ExecutableDeployItem, Key, NamedArg, PublicKey, RuntimeArgs, TransferAddr, URef, KEY_DICTIONARY_LENGTH, KEY_HASH_LENGTH, TRANSFER_ADDR_LENGTH, U128, U256, U512, UREF_ADDR_LENGTH
+    account::{AccountHash, ACCOUNT_HASH_LENGTH}, bytesrepr::{self, Bytes, ToBytes}, contract_messages::{MessageAddr, TopicNameHash}, system::auction::BidAddr, AccessRights, AsymmetricType, ByteCodeAddr, CLType, CLTyped, CLValue, DeployHash, Digest, EntityAddr, EraId, ExecutableDeployItem, Key, NamedArg, PublicKey, RuntimeArgs, TransferAddr, URef, KEY_DICTIONARY_LENGTH, KEY_HASH_LENGTH, TRANSFER_ADDR_LENGTH, U128, U256, U512, UREF_ADDR_LENGTH
 };
 use rand::{prelude::SliceRandom, Rng};
 use strum::{EnumIter, IntoEnumIterator};
@@ -389,31 +389,41 @@ fn sample_urefs() -> Vec<URef> {
 }
 
 fn sample_keys() -> Vec<Key> {
-    let account_key = casper_types::Key::Account(AccountHash::new([1u8; ACCOUNT_HASH_LENGTH]));
-    let hash_key = casper_types::Key::Hash([1u8; KEY_HASH_LENGTH]);
-    let balance_key = casper_types::Key::Balance([1u8; UREF_ADDR_LENGTH]);
-    let bid_key = casper_types::Key::Bid(AccountHash::new([1u8; ACCOUNT_HASH_LENGTH]));
-    let deploy_info_key = casper_types::Key::DeployInfo(DeployHash::new(Digest::hash([1u8; DeployHash::LENGTH])));
-    let dictionary_key = casper_types::Key::Dictionary([1u8; KEY_DICTIONARY_LENGTH]);
-    let era_info_key = casper_types::Key::EraInfo(EraId::new(0));
-    let transfer_key = casper_types::Key::Transfer(TransferAddr::new([1u8; TRANSFER_ADDR_LENGTH]));
-    let uref_key = casper_types::Key::URef(URef::new(
+    let account_key = Key::Account(AccountHash::new([1u8; ACCOUNT_HASH_LENGTH]));
+    let hash_key = Key::Hash([1u8; KEY_HASH_LENGTH]);
+    let balance_key = Key::Balance([1u8; UREF_ADDR_LENGTH]);
+    let bid_key = Key::Bid(AccountHash::new([1u8; ACCOUNT_HASH_LENGTH]));
+    let deploy_info_key = Key::DeployInfo(DeployHash::new(Digest::hash([1u8; DeployHash::LENGTH])));
+    let dictionary_key = Key::Dictionary([1u8; KEY_DICTIONARY_LENGTH]);
+    let era_info_key = Key::EraInfo(EraId::new(0));
+    let transfer_key = Key::Transfer(TransferAddr::new([1u8; TRANSFER_ADDR_LENGTH]));
+    let uref_key = Key::URef(URef::new(
         [1u8; UREF_ADDR_LENGTH],
         AccessRights::READ_ADD_WRITE,
     ));
-    let withdraw_key = casper_types::Key::Withdraw(AccountHash::new([1u8; ACCOUNT_HASH_LENGTH]));
-    let system_registry_key = casper_types::Key::SystemEntityRegistry;
-    let chainspec_registry_key = casper_types::Key::ChainspecRegistry;
-    let checksum_registry_key = casper_types::Key::ChecksumRegistry;
+    let withdraw_key = Key::Withdraw(AccountHash::new([1u8; ACCOUNT_HASH_LENGTH]));
+    let unbond = Key::Unbond(AccountHash::new([1u8; ACCOUNT_HASH_LENGTH]));
+    let bid_addr_legacy = Key::BidAddr(BidAddr::legacy([1u8; 32]));
+    let smart_contract = Key::SmartContract([1u8; 32]);
+    let addressable_entity_account = Key::AddressableEntity(EntityAddr::new_account([1u8; 32]));
+    let addressable_entity_contract = Key::AddressableEntity(EntityAddr::new_smart_contract([1u8; 32]));
+    let addressable_entity_system = Key::AddressableEntity(EntityAddr::new_system([1u8; 32]));
+    let byte_code = Key::ByteCode(ByteCodeAddr::Empty);
+    let message_topic = Key::Message(MessageAddr::new_topic_addr([1u8; 32], TopicNameHash::new([1u8; 32])));
+    let message = Key::Message(MessageAddr::new_message_addr(
+        [1u8; 32],
+        TopicNameHash::new([1u8; 32]),
+        1
+    ));
+    // let state = Key::State(EntityAddr)
+    
+    //let bid_addr = Key::BidAddr(BidAddr::new_credit(validator, era_id)))
+    let system_registry_key = Key::SystemEntityRegistry;
+    let chainspec_registry_key = Key::ChainspecRegistry;
+    let checksum_registry_key = Key::ChecksumRegistry;
+    let era_summary = Key::EraSummary;
 
     /*  TODO: The following aren't covered. Investigate.
-        Key::EraSummary
-        Key::Unbond(account_hash)
-        Key::BidAddr(bid_addr)
-        Key::SmartContract(_)
-        Key::AddressableEntity(entity_addr)
-        Key::ByteCode(byte_code_addr)
-        Key::Message(message_addr)
         Key::NamedKey(named_key_addr)
         Key::BlockGlobal(block_global_addr)
         Key::BalanceHold(balance_hold_addr)
@@ -435,5 +445,15 @@ fn sample_keys() -> Vec<Key> {
         system_registry_key,
         chainspec_registry_key,
         checksum_registry_key,
+        era_summary,
+        unbond,
+        bid_addr_legacy,
+        smart_contract,
+        addressable_entity_account,
+        addressable_entity_contract,
+        addressable_entity_system,
+        byte_code,
+        message_topic,
+        message
     ]
 }

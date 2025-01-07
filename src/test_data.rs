@@ -1,7 +1,7 @@
 use std::str::FromStr;
 
 use casper_types::{
-    account::AccountHash, AccessRights, AsymmetricType, CLValue, Deploy, DeployHash, DeployHeader, Digest, ExecutableDeployItem, Key, PublicKey, RuntimeArgs, SecretKey, TimeDiff, Timestamp, URef, U512
+    account::AccountHash, AccessRights, AsymmetricType, CLValue, Deploy, DeployHash, DeployHeader, Digest, ExecutableDeployItem, Key, PublicKey, RuntimeArgs, SecretKey, TimeDiff, Timestamp, Transaction, URef, U512
 };
 use rand::{prelude::*, Rng};
 
@@ -178,7 +178,7 @@ fn make_deploy_sample(
     ttl: TimeDiff,
     dependencies: Vec<DeployHash>,
     signing_keys: &[SecretKey],
-) -> Sample<Deploy> {
+) -> Sample<Transaction> {
     let (main_key, secondary_keys) = signing_keys.split_at(1);
     let (payment_label, payment, payment_validity) = payment.destructure();
     let (session_label, session, session_validity) = session.destructure();
@@ -195,8 +195,9 @@ fn make_deploy_sample(
 
     let hash = DeployHash::new(Digest::hash([1u8; 32]));
     let deploy = Deploy::new(hash, header, payment, session);
+    let transaction = Transaction::from_deploy(deploy);
 
-    let mut sample = Sample::new(session_label, deploy, session_validity && payment_validity);
+    let mut sample = Sample::new(session_label, transaction, session_validity && payment_validity);
     sample.add_label(payment_label);
 
     // Sign deploy with possibly multiple keys.
@@ -240,7 +241,7 @@ fn construct_samples<R: Rng>(
     rng: &mut R,
     session_samples: Vec<Sample<ExecutableDeployItem>>,
     payment_samples: Vec<Sample<ExecutableDeployItem>>,
-) -> Vec<Sample<Deploy>> {
+) -> Vec<Sample<Transaction>> {
     let mut samples = vec![];
 
     // These params do not change validity of a sample.
@@ -273,7 +274,7 @@ fn construct_samples<R: Rng>(
     samples
 }
 
-pub(crate) fn redelegate_samples<R: Rng>(rng: &mut R) -> Vec<Sample<Deploy>> {
+pub(crate) fn redelegate_samples<R: Rng>(rng: &mut R) -> Vec<Sample<Transaction>> {
     let valid_samples = redelegate::valid();
     let valid_payment_samples = vec![system_payment::valid()];
 
@@ -288,7 +289,7 @@ pub(crate) fn redelegate_samples<R: Rng>(rng: &mut R) -> Vec<Sample<Deploy>> {
     samples
 }
 
-pub(crate) fn generic_samples<R: Rng>(rng: &mut R) -> Vec<Sample<Deploy>> {
+pub(crate) fn generic_samples<R: Rng>(rng: &mut R) -> Vec<Sample<Transaction>> {
     let valid_samples = generic::valid(rng);
     let valid_payment_samples = vec![system_payment::valid()];
 
@@ -305,7 +306,7 @@ pub(crate) fn generic_samples<R: Rng>(rng: &mut R) -> Vec<Sample<Deploy>> {
     samples
 }
 
-pub(crate) fn native_transfer_samples<R: Rng>(rng: &mut R) -> Vec<Sample<Deploy>> {
+pub(crate) fn native_transfer_samples<R: Rng>(rng: &mut R) -> Vec<Sample<Transaction>> {
     let mut native_transfer_samples =
         construct_samples(rng, native_transfer::valid(), vec![system_payment::valid()]);
 
@@ -317,7 +318,7 @@ pub(crate) fn native_transfer_samples<R: Rng>(rng: &mut R) -> Vec<Sample<Deploy>
     native_transfer_samples
 }
 
-pub(crate) fn delegate_samples<R: Rng>(rng: &mut R) -> Vec<Sample<Deploy>> {
+pub(crate) fn delegate_samples<R: Rng>(rng: &mut R) -> Vec<Sample<Transaction>> {
     let mut delegate_samples =
         construct_samples(rng, delegate::valid(), vec![system_payment::valid()]);
 
@@ -330,7 +331,7 @@ pub(crate) fn delegate_samples<R: Rng>(rng: &mut R) -> Vec<Sample<Deploy>> {
     delegate_samples
 }
 
-pub(crate) fn undelegate_samples<R: Rng>(rng: &mut R) -> Vec<Sample<Deploy>> {
+pub(crate) fn undelegate_samples<R: Rng>(rng: &mut R) -> Vec<Sample<Transaction>> {
     let mut undelegate_samples =
         construct_samples(rng, undelegate::valid(), vec![system_payment::valid()]);
 
