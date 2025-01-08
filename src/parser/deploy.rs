@@ -7,7 +7,9 @@ use crate::{
 };
 
 use casper_types::{
-    bytesrepr::Bytes, system::mint::{self, ARG_ID, ARG_SOURCE, ARG_TARGET, ARG_TO}, CLValue, Deploy, DeployHeader, Digest, ExecutableDeployItem, RuntimeArgs, U512
+    bytesrepr::Bytes,
+    system::mint::{self, ARG_ID, ARG_SOURCE, ARG_TARGET, ARG_TO},
+    CLValue, Deploy, DeployHeader, Digest, ExecutableDeployItem, RuntimeArgs, U512,
 };
 use thousands::Separable;
 

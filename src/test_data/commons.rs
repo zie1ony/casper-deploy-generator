@@ -1,4 +1,8 @@
-use casper_types::{bytesrepr::Bytes, contracts::{ContractHash, ContractPackageHash, ContractVersion}, ExecutableDeployItem, RuntimeArgs};
+use casper_types::{
+    bytesrepr::Bytes,
+    contracts::{ContractHash, ContractPackageHash, ContractVersion},
+    ExecutableDeployItem, RuntimeArgs,
+};
 
 use crate::sample::Sample;
 

@@ -13,8 +13,7 @@ use super::deploy::{identity, parse_amount};
 pub(crate) fn parse_runtime_args(phase: &TxnPhase, ra: &RuntimeArgs) -> Vec<Element> {
     let mut elements: Vec<Element> = vec![];
     if !ra.is_empty() {
-        let args_digest =
-            Digest::hash(ToBytes::to_bytes(ra).expect("ToBytes to work."));
+        let args_digest = Digest::hash(ToBytes::to_bytes(ra).expect("ToBytes to work."));
         let args_hash = base16::encode_lower(&args_digest);
         elements.push(Element::regular(
             "args hash",

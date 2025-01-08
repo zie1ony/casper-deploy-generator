@@ -4,7 +4,14 @@ use std::{
 };
 
 use casper_types::{
-    account::{AccountHash, ACCOUNT_HASH_LENGTH}, bytesrepr::{self, Bytes, ToBytes}, contract_messages::{MessageAddr, TopicNameHash}, system::auction::BidAddr, AccessRights, AsymmetricType, ByteCodeAddr, CLType, CLTyped, CLValue, DeployHash, Digest, EntityAddr, EraId, ExecutableDeployItem, Key, NamedArg, PublicKey, RuntimeArgs, TransferAddr, URef, KEY_DICTIONARY_LENGTH, KEY_HASH_LENGTH, TRANSFER_ADDR_LENGTH, U128, U256, U512, UREF_ADDR_LENGTH
+    account::{AccountHash, ACCOUNT_HASH_LENGTH},
+    bytesrepr::{self, Bytes, ToBytes},
+    contract_messages::{MessageAddr, TopicNameHash},
+    system::auction::BidAddr,
+    AccessRights, AsymmetricType, ByteCodeAddr, CLType, CLTyped, CLValue, DeployHash, Digest,
+    EntityAddr, EraId, ExecutableDeployItem, Key, NamedArg, PublicKey, RuntimeArgs, TransferAddr,
+    URef, KEY_DICTIONARY_LENGTH, KEY_HASH_LENGTH, TRANSFER_ADDR_LENGTH, U128, U256, U512,
+    UREF_ADDR_LENGTH,
 };
 use rand::{prelude::SliceRandom, Rng};
 use strum::{EnumIter, IntoEnumIterator};
@@ -406,17 +413,21 @@ fn sample_keys() -> Vec<Key> {
     let bid_addr_legacy = Key::BidAddr(BidAddr::legacy([1u8; 32]));
     let smart_contract = Key::SmartContract([1u8; 32]);
     let addressable_entity_account = Key::AddressableEntity(EntityAddr::new_account([1u8; 32]));
-    let addressable_entity_contract = Key::AddressableEntity(EntityAddr::new_smart_contract([1u8; 32]));
+    let addressable_entity_contract =
+        Key::AddressableEntity(EntityAddr::new_smart_contract([1u8; 32]));
     let addressable_entity_system = Key::AddressableEntity(EntityAddr::new_system([1u8; 32]));
     let byte_code = Key::ByteCode(ByteCodeAddr::Empty);
-    let message_topic = Key::Message(MessageAddr::new_topic_addr([1u8; 32], TopicNameHash::new([1u8; 32])));
+    let message_topic = Key::Message(MessageAddr::new_topic_addr(
+        [1u8; 32],
+        TopicNameHash::new([1u8; 32]),
+    ));
     let message = Key::Message(MessageAddr::new_message_addr(
         [1u8; 32],
         TopicNameHash::new([1u8; 32]),
-        1
+        1,
     ));
     // let state = Key::State(EntityAddr)
-    
+
     //let bid_addr = Key::BidAddr(BidAddr::new_credit(validator, era_id)))
     let system_registry_key = Key::SystemEntityRegistry;
     let chainspec_registry_key = Key::ChainspecRegistry;
@@ -430,7 +441,7 @@ fn sample_keys() -> Vec<Key> {
         Key::EntryPoint(entry_point_addr)
         Key::State(entity_addr)
     */
-    
+
     vec![
         account_key,
         hash_key,
@@ -454,6 +465,6 @@ fn sample_keys() -> Vec<Key> {
         addressable_entity_system,
         byte_code,
         message_topic,
-        message
+        message,
     ]
 }

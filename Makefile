@@ -13,7 +13,7 @@ $(V).SILENT:
 # meaning, no mather how many times we re-generate it we will keep getting the same data in `output.txt` == no diff.
 test-vectors:
 	cp manual.json old_manual.json && \
-	CL_TEST_SEED=c954046e102bdfb7c954046e102bdfb7 $(CARGO) run > manual.json
+	$(CARGO) run > manual.json
 
 # To check whether any of the old entries have changed.
 # If we see any difference in previously-generated entries it might mean we're breaking backwards compatibility.

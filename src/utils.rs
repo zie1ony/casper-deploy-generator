@@ -1,11 +1,12 @@
-use casper_types::{
-    bytesrepr::{FromBytes, ToBytes}, BlockGlobalAddr, CLType, CLValue, Key, PublicKey, URef, ED25519_TAG, SECP256K1_TAG
-};
-use itertools::Itertools;
 use blake2::{
     digest::{Update, VariableOutput},
     Blake2bVar,
 };
+use casper_types::{
+    bytesrepr::{FromBytes, ToBytes},
+    BlockGlobalAddr, CLType, CLValue, Key, PublicKey, URef, ED25519_TAG, SECP256K1_TAG,
+};
+use itertools::Itertools;
 
 use crate::checksummed_hex;
 
@@ -75,11 +76,11 @@ fn drop_key_type_prefix(cl_in: String) -> String {
                 },
                 Key::BalanceHold(_) => "balance-hold-",
                 Key::State(_) => "state-",
-                Key::AddressableEntity(_) |
-                Key::ByteCode(_) |
-                Key::Message(_) | 
-                Key::NamedKey(_) |
-                Key::EntryPoint(_) => "",
+                Key::AddressableEntity(_)
+                | Key::ByteCode(_)
+                | Key::Message(_)
+                | Key::NamedKey(_)
+                | Key::EntryPoint(_) => "",
             };
 
             let stripped_prefix = cl_in.chars().skip(prefix.len()).collect();
@@ -110,7 +111,9 @@ pub(crate) fn cl_value_to_string(cl_in: &CLValue) -> String {
                 Key::URef(uref) => checksummed_hex::encode(uref.addr()),
                 Key::Hash(addr) => checksummed_hex::encode(addr),
                 Key::Transfer(addr) => checksummed_hex::encode(addr.value()),
-                Key::DeployInfo(deploy_hash) => checksummed_hex::encode(deploy_hash.to_bytes().expect("DeployHash should serialize")),
+                Key::DeployInfo(deploy_hash) => checksummed_hex::encode(
+                    deploy_hash.to_bytes().expect("DeployHash should serialize"),
+                ),
                 Key::Balance(uref_addr) => checksummed_hex::encode(uref_addr),
                 Key::Dictionary(dict_addr) => checksummed_hex::encode(dict_addr),
                 Key::Account(account_hash)
@@ -123,15 +126,43 @@ pub(crate) fn cl_value_to_string(cl_in: &CLValue) -> String {
                 | Key::ChecksumRegistry
                 | Key::EraSummary => parse_as_default_json(cl_in),
                 Key::SmartContract(package) => checksummed_hex::encode(package),
-                Key::BidAddr(bid_addr) => checksummed_hex::encode(bid_addr.to_bytes().expect("BidAddr should serialize")),
-                Key::AddressableEntity(entity_addr) => checksummed_hex::encode(entity_addr.to_bytes().expect("Entity should serialize")),
-                Key::ByteCode(byte_code_addr) => checksummed_hex::encode(byte_code_addr.to_bytes().expect("ByteCodeAddr should serialize")),
-                Key::Message(message_addr) => checksummed_hex::encode(message_addr.to_bytes().expect("Message should serialize")),
-                Key::NamedKey(named_key_addr) => checksummed_hex::encode(named_key_addr.to_bytes().expect("NamedKeyAddr should serialize")),
-                Key::BlockGlobal(block_global_addr) => checksummed_hex::encode(block_global_addr.to_bytes().expect("BlockGlobalAddr should serialize")),
-                Key::BalanceHold(balance_hold_addr) => checksummed_hex::encode(balance_hold_addr.to_bytes().expect("BalanceHoldAddr should serialize")),
-                Key::EntryPoint(entry_point_addr) => checksummed_hex::encode(entry_point_addr.to_bytes().expect("EntryPointAddr should serialize")),
-                Key::State(entity_addr) => checksummed_hex::encode(entity_addr.to_bytes().expect("EntityAddr should serialize")),
+                Key::BidAddr(bid_addr) => {
+                    checksummed_hex::encode(bid_addr.to_bytes().expect("BidAddr should serialize"))
+                }
+                Key::AddressableEntity(entity_addr) => checksummed_hex::encode(
+                    entity_addr.to_bytes().expect("Entity should serialize"),
+                ),
+                Key::ByteCode(byte_code_addr) => checksummed_hex::encode(
+                    byte_code_addr
+                        .to_bytes()
+                        .expect("ByteCodeAddr should serialize"),
+                ),
+                Key::Message(message_addr) => checksummed_hex::encode(
+                    message_addr.to_bytes().expect("Message should serialize"),
+                ),
+                Key::NamedKey(named_key_addr) => checksummed_hex::encode(
+                    named_key_addr
+                        .to_bytes()
+                        .expect("NamedKeyAddr should serialize"),
+                ),
+                Key::BlockGlobal(block_global_addr) => checksummed_hex::encode(
+                    block_global_addr
+                        .to_bytes()
+                        .expect("BlockGlobalAddr should serialize"),
+                ),
+                Key::BalanceHold(balance_hold_addr) => checksummed_hex::encode(
+                    balance_hold_addr
+                        .to_bytes()
+                        .expect("BalanceHoldAddr should serialize"),
+                ),
+                Key::EntryPoint(entry_point_addr) => checksummed_hex::encode(
+                    entry_point_addr
+                        .to_bytes()
+                        .expect("EntryPointAddr should serialize"),
+                ),
+                Key::State(entity_addr) => checksummed_hex::encode(
+                    entity_addr.to_bytes().expect("EntityAddr should serialize"),
+                ),
             }
         }
         CLType::URef => {
