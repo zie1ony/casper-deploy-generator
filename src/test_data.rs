@@ -1,7 +1,9 @@
 use std::str::FromStr;
 
 use casper_types::{
-    account::AccountHash, AccessRights, AsymmetricType, CLValue, Deploy, DeployHash, DeployHeader, Digest, ExecutableDeployItem, Key, PublicKey, RuntimeArgs, SecretKey, TimeDiff, Timestamp, Transaction, URef, U512
+    account::AccountHash, AccessRights, AsymmetricType, CLValue, Deploy, DeployHash, DeployHeader,
+    Digest, ExecutableDeployItem, Key, PublicKey, RuntimeArgs, SecretKey, TimeDiff, Timestamp,
+    Transaction, URef, U512,
 };
 use rand::{prelude::*, Rng};
 
@@ -197,7 +199,11 @@ fn make_deploy_sample(
     let deploy = Deploy::new(hash, header, payment, session);
     let transaction = Transaction::from_deploy(deploy);
 
-    let mut sample = Sample::new(session_label, transaction, session_validity && payment_validity);
+    let mut sample = Sample::new(
+        session_label,
+        transaction,
+        session_validity && payment_validity,
+    );
     sample.add_label(payment_label);
 
     // Sign deploy with possibly multiple keys.

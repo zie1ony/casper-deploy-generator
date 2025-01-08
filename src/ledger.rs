@@ -323,14 +323,37 @@ pub(super) struct ZondaxRepr {
 }
 
 /// Maps `Deploy` structure to the expected JSON representation.
+pub(super) fn deploy_to_json(
+    index: usize,
+    sample_deploy: Sample<Deploy>,
+    config: &LimitedLedgerConfig,
+) -> ZondaxRepr {
+    let (name, deploy, valid) = sample_deploy.destructure();
+    let blob = hex::encode(deploy.to_bytes().unwrap());
+    let ledger = Ledger::from_deploy(deploy);
+    let ledger_view = LimitedLedgerView::new(config, ledger);
+    let output = ledger_view.regular();
+    let output_expert = ledger_view.expert();
+    ZondaxRepr {
+        index,
+        name,
+        valid_regular: valid,
+        valid_expert: valid,
+        testnet: true,
+        blob,
+        output,
+        output_expert,
+    }
+}
+
 pub(super) fn transaction_to_json(
     index: usize,
     sample_deploy: Sample<Transaction>,
     config: &LimitedLedgerConfig,
 ) -> ZondaxRepr {
-    let (name, deploy, valid) = sample_deploy.destructure();
-    let blob = hex::encode(deploy.to_bytes().unwrap());
-    let ledger = Ledger::from_transaction(deploy);
+    let (name, transaction, valid) = sample_deploy.destructure();
+    let blob = hex::encode(transaction.to_bytes().unwrap());
+    let ledger = Ledger::from_transaction(transaction);
     let ledger_view = LimitedLedgerView::new(config, ledger);
     let output = ledger_view.regular();
     let output_expert = ledger_view.expert();
