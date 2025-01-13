@@ -1,4 +1,4 @@
-mod auction;
+pub(crate) mod auction;
 
 use std::collections::BTreeMap;
 
@@ -72,6 +72,16 @@ pub(crate) fn parse_v1_phase(v1: &TransactionV1, phase: TxnPhase) -> Vec<Element
             match meta.target {
                 TransactionTarget::Native => {
                     let args = meta.args.as_named().unwrap();
+                    match meta.entry_point {
+                        TransactionEntryPoint::Transfer => {
+                            elements.extend(parse_transfer_args(args));
+                            let args_sans_transfer = remove_transfer_args(args.clone());
+                            if !args_sans_transfer.is_empty() {
+                                elements.extend(parse_runtime_args(&phase, args));
+                            }
+                        },
+                        _ => panic!("unsupported entry point {:?} in native transaction", meta.entry_point)
+                    }
                     if let TransactionEntryPoint::Transfer = meta.entry_point {
                         elements.extend(parse_transfer_args(args));
                         let args_sans_transfer = remove_transfer_args(args.clone());

@@ -57,8 +57,8 @@ fn deploy_type(d: &Deploy) -> Element {
     Element::regular("Type", dtype.to_string())
 }
 
-fn transaction_v1_type(v1: &TransactionV1) -> Element {
-    let entry_point: TransactionEntryPoint = v1.deserialize_field(ENTRY_POINT_MAP_KEY).unwrap();
+fn transaction_v1_type(t: &TransactionV1) -> Element {
+    let entry_point: TransactionEntryPoint = t.deserialize_field(ENTRY_POINT_MAP_KEY).unwrap();
     
     let v1_type = match entry_point {
         TransactionEntryPoint::Call | TransactionEntryPoint::Custom(_) => "Contract execution",

@@ -1,7 +1,7 @@
 use std::{collections::BTreeMap, convert::TryInto};
 
 use casper_types::{
-    bytesrepr::{Bytes, ToBytes}, Deploy, ExecutableDeployItem, InitiatorAddr, PricingMode, Transaction, TransactionArgs, TransactionEntryPoint, TransactionScheduling, TransactionTarget, TransactionV1, TransactionV1Hash, TransactionV1Payload, U512
+    bytesrepr::{Bytes, ToBytes}, Deploy, ExecutableDeployItem, InitiatorAddr, PricingMode, Transaction, TransactionArgs, TransactionEntryPoint, TransactionInvocationTarget, TransactionRuntimeParams, TransactionScheduling, TransactionTarget, TransactionV1, TransactionV1Hash, TransactionV1Payload, U512
 };
 use deterministic::DeterministicTestRng;
 use ledger::{LimitedLedgerConfig, ZondaxRepr};
@@ -78,7 +78,46 @@ fn deploy_to_v1(sample: Sample<Transaction>, ep: TransactionEntryPoint, new_suff
     let initiator_addr = InitiatorAddr::AccountHash(deploy.account().clone().to_account_hash());
     let hash = TransactionV1Hash::new(deploy.hash().inner().clone());
 
-    let target = TransactionTarget::Native;
+    let target = match deploy.session() {
+        ExecutableDeployItem::ModuleBytes { module_bytes, .. } => TransactionTarget::Session {
+            is_install_upgrade: false,
+            module_bytes: module_bytes.clone(),
+            runtime: TransactionRuntimeParams::VmCasperV1
+        },
+        ExecutableDeployItem::StoredContractByHash { hash, .. } => {
+            TransactionTarget::Stored {
+                id: TransactionInvocationTarget::ByHash(hash.value()),
+                runtime: TransactionRuntimeParams::VmCasperV1
+            }
+        },
+        ExecutableDeployItem::StoredContractByName { name, .. } => {
+            TransactionTarget::Stored {
+                id: TransactionInvocationTarget::ByName(name.into()),
+                runtime: TransactionRuntimeParams::VmCasperV1
+            }
+        },
+        ExecutableDeployItem::StoredVersionedContractByHash { hash, version, .. } => {
+            TransactionTarget::Stored {
+                id: TransactionInvocationTarget::ByPackageHash {
+                    addr: hash.value(),
+                    version: version.clone()
+                },
+                runtime: TransactionRuntimeParams::VmCasperV1
+            }
+        },
+        ExecutableDeployItem::StoredVersionedContractByName { name, version, .. } => {
+            TransactionTarget::Stored {
+                id: TransactionInvocationTarget::ByPackageName {
+                    name: name.into(),
+                    version: version.clone()
+                },
+                runtime: TransactionRuntimeParams::VmCasperV1
+            }
+        },
+        ExecutableDeployItem::Transfer { .. } => {
+            TransactionTarget::Native
+        },
+    };
     let scheduling = TransactionScheduling::Standard;
     let fields = {
         let mut fields: BTreeMap<u16, Bytes> = BTreeMap::new();
