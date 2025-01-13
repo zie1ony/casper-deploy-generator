@@ -1,6 +1,6 @@
 use std::{fmt::Display, rc::Rc};
 
-use casper_types::{bytesrepr::ToBytes, Deploy, Transaction};
+use casper_types::{bytesrepr::ToBytes, Deploy, Transaction, TransactionV1};
 
 use serde::{Deserialize, Serialize};
 
@@ -89,7 +89,13 @@ impl Ledger {
     fn from_transaction(transaction: Transaction) -> Self {
         match transaction {
             Transaction::Deploy(deploy) => Self::from_deploy(deploy),
-            Transaction::V1(_) => unimplemented!(),
+            Transaction::V1(v1) => Self::from_v1(v1),
+        }
+    }
+
+    fn from_v1(v1: TransactionV1) -> Self {
+        Ledger {
+            ledger_elements: parser::parse_v1(v1),
         }
     }
 

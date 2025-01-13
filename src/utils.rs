@@ -3,8 +3,7 @@ use blake2::{
     Blake2bVar,
 };
 use casper_types::{
-    bytesrepr::{FromBytes, ToBytes},
-    BlockGlobalAddr, CLType, CLValue, Key, PublicKey, URef, ED25519_TAG, SECP256K1_TAG,
+    account::AccountHash, bytesrepr::{FromBytes, ToBytes}, BlockGlobalAddr, CLType, CLValue, Key, PublicKey, URef, ED25519_TAG, SECP256K1_TAG
 };
 use itertools::Itertools;
 
@@ -211,4 +210,14 @@ pub(crate) fn parse_public_key(key: &PublicKey) -> String {
 
     let checksummed_key = checksummed_hex::encode(Into::<Vec<u8>>::into(key));
     format!("{}{}", key_tag, checksummed_key)
+}
+
+// `AccountHash`'s `String` representation includes an `account-hash-` prefix.
+// This method drops that prefix from the `String` representation for the Ledger.
+pub(crate) fn parse_account_hash(account_hash: &AccountHash) -> String {
+    account_hash
+        .to_formatted_string()
+        .chars()
+        .skip("account-hash-".len())
+        .collect()
 }

@@ -1,10 +1,9 @@
 use crate::ledger::{Element, TxnPhase};
 use crate::utils::cl_value_to_string;
 use casper_types::bytesrepr::ToBytes;
-use casper_types::system::mint::{ARG_ID, ARG_SOURCE, ARG_TARGET, ARG_TO};
-use casper_types::{Digest, RuntimeArgs};
-
-use super::deploy::{identity, parse_amount};
+use casper_types::system::mint::{self, ARG_ID, ARG_SOURCE, ARG_TARGET, ARG_TO};
+use casper_types::{Digest, RuntimeArgs, U512};
+use thousands::Separable;
 
 /// Parses all contract arguments into a form:
 /// arg-n-name: <name>
@@ -77,4 +76,28 @@ pub(crate) fn parse_transfer_args(args: &RuntimeArgs) -> Vec<Element> {
     elements.extend(parse_amount(args));
     elements.extend(parse_optional_arg(args, ARG_ID, "ID", true, identity));
     elements
+}
+
+pub(crate) fn parse_fee(args: &RuntimeArgs) -> Option<Element> {
+    parse_motes(args, "fee")
+}
+
+pub(crate) fn parse_amount(args: &RuntimeArgs) -> Option<Element> {
+    parse_motes(args, "amount")
+}
+
+fn parse_motes(args: &RuntimeArgs, ledger_label: &str) -> Option<Element> {
+    let f = |amount_str: String| {
+        let motes_amount = U512::from_dec_str(&amount_str).unwrap();
+        format_amount(motes_amount)
+    };
+    parse_optional_arg(args, mint::ARG_AMOUNT, ledger_label, false, f)
+}
+
+pub(crate) fn format_amount(motes: U512) -> String {
+    format!("{} motes", motes.separate_with_spaces())
+}
+
+pub(crate) fn identity<T>(el: T) -> T {
+    el
 }
