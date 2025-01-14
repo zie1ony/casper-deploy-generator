@@ -130,10 +130,7 @@ pub(crate) fn parse_v1_meta(v1: &TransactionV1) -> Vec<Element> {
 }
 
 /// Returns the main elements describing the deploy:
-/// – is it payment or session code,
-/// – is it a raw contract bytes, call by name, by hash, versioned, etc.?
-///
-/// Does NOT parse the arguments or entry points.
+/// Is it a raw contract bytes, call by name, by hash, versioned, etc.?
 pub(crate) fn v1_type(item: &TransactionV1Meta) -> Vec<Element> {
     match &item.target {
         TransactionTarget::Native => {
@@ -144,7 +141,7 @@ pub(crate) fn v1_type(item: &TransactionV1Meta) -> Vec<Element> {
                 TransactionInvocationTarget::ByHash(hash) => {
                     vec![
                         Element::regular("execution", "by-hash".to_string()),
-                        Element::regular("address", format!("{:?}", hash)),
+                        Element::regular("address", hash.into_iter().map(|x| x.to_string()).collect()),
                     ]
                 },
                 TransactionInvocationTarget::ByName(name) => {
@@ -156,7 +153,7 @@ pub(crate) fn v1_type(item: &TransactionV1Meta) -> Vec<Element> {
                 TransactionInvocationTarget::ByPackageHash { addr, version } => {
                     vec![
                         Element::regular("execution", "by-hash-versioned".to_string()),
-                        Element::regular("address", format!("{:?}", addr)),
+                        Element::regular("address", addr.into_iter().map(|x| x.to_string()).collect()),
                         parse_version(&version),
                     ]
                 },

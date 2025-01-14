@@ -55,11 +55,12 @@ pub(crate) fn parse_optional_arg<F: Fn(String) -> String>(
 }
 
 /// Required fields for transfer are:
+/// * source
 /// * target
 /// * amount
-/// * ID
 /// Optional fields:
-/// * source
+/// * to (Option<AccountHash>)
+/// * ID
 pub(crate) fn parse_transfer_args(args: &RuntimeArgs) -> Vec<Element> {
     let mut elements: Vec<Element> = parse_optional_arg(args, ARG_TO, "recipient", false, identity)
         .into_iter()

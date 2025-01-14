@@ -94,7 +94,7 @@ pub(super) fn invalid() -> Vec<Sample<TransactionV1Meta>> {
     let invalid_transfer_args: Vec<Sample<RuntimeArgs>> = vec![
         Sample::new("missing_amount", missing_required_amount, false),
         Sample::new("missing_validator", missing_required_validator, false),
-        Sample::new("missind_delegator", missing_required_delegator, false),
+        Sample::new("missing_delegator", missing_required_delegator, false),
         Sample::new("invalid_type_amount", invalid_amount_type, false),
     ];
 

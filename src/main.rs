@@ -1,7 +1,7 @@
 use std::{collections::BTreeMap, convert::TryInto};
 
 use casper_types::{
-    bytesrepr::{Bytes, ToBytes}, Deploy, ExecutableDeployItem, InitiatorAddr, PricingMode, Transaction, TransactionArgs, TransactionEntryPoint, TransactionInvocationTarget, TransactionRuntimeParams, TransactionScheduling, TransactionTarget, TransactionV1, TransactionV1Hash, TransactionV1Payload, U512
+    bytesrepr::{Bytes, ToBytes}, ExecutableDeployItem, InitiatorAddr, PricingMode, Transaction, TransactionArgs, TransactionEntryPoint, TransactionInvocationTarget, TransactionRuntimeParams, TransactionScheduling, TransactionTarget, TransactionV1, TransactionV1Hash, TransactionV1Payload, U512
 };
 use deterministic::DeterministicTestRng;
 use ledger::{LimitedLedgerConfig, ZondaxRepr};
