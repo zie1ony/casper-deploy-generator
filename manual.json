@@ -5193,7 +5193,8 @@
     "output": [
       "0 | Txn hash [1/2] : f40cEAF86E5776923332B8d8fd3bEf849c",
       "0 | Txn hash [2/2] : adb19C6996BC272af1f648d9566a4C",
-      "1 | Type : Token transfer",
+      "1 | Type : Native",
+      "_ | EntryPoint: Delegate",
       "2 | Chain ID : mainnet",
       "3 | Account [1/2] : 013b6a27bCcEB6a42D62a3A8D02A6f0d73",
       "3 | Account [2/2] : 653215771De243A63AC048a18B59dA29",

@@ -4,7 +4,7 @@ mod runtime_args;
 pub(crate) mod v1;
 
 use casper_types::{Deploy, TransactionEntryPoint, TransactionV1};
-use v1::{parse_v1_approvals, parse_v1_payload, parse_v1_phase, ENTRY_POINT_MAP_KEY};
+use v1::{parse_v1_approvals, parse_v1_meta, parse_v1_payload, ENTRY_POINT_MAP_KEY};
 
 use crate::{
     checksummed_hex, ledger::{Element, TxnPhase}, message::CasperMessage, parser::deploy::{parse_approvals, parse_deploy_header, parse_phase}
@@ -36,8 +36,7 @@ pub(crate) fn parse_v1(v1: TransactionV1) -> Vec<Element> {
     ));
     elements.push(transaction_v1_type(&v1));
     elements.extend(parse_v1_payload(v1.payload()));
-    elements.extend(parse_v1_phase(&v1, TxnPhase::Payment));
-    elements.extend(parse_v1_phase(&v1, TxnPhase::Session));
+    elements.extend(parse_v1_meta(&v1));
     elements.extend(parse_v1_approvals(&v1));
     elements
 }

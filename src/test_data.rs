@@ -1,15 +1,13 @@
-use std::str::FromStr;
+use std::{collections::{BTreeMap, BTreeSet}, str::FromStr};
 
 use casper_types::{
-    account::AccountHash, AccessRights, AsymmetricType, CLValue, Deploy, DeployHash, DeployHeader,
-    Digest, ExecutableDeployItem, Key, PublicKey, RuntimeArgs, SecretKey, TimeDiff, Timestamp,
-    Transaction, URef, U512,
+    account::AccountHash, bytesrepr::{Bytes, ToBytes}, AccessRights, AsymmetricType, CLValue, Deploy, DeployHash, DeployHeader, Digest, ExecutableDeployItem, InitiatorAddr, Key, PricingMode, PublicKey, RuntimeArgs, SecretKey, TimeDiff, Timestamp, Transaction, TransactionArgs, TransactionEntryPoint, TransactionScheduling, TransactionTarget, TransactionV1, TransactionV1Payload, URef, U512
 };
 use rand::{prelude::*, Rng};
 
 use auction::{delegate, undelegate};
 
-use crate::sample::Sample;
+use crate::{parser::v1::{TransactionV1Meta, ARGS_MAP_KEY, ENTRY_POINT_MAP_KEY, SCHEDULING_MAP_KEY, TARGET_MAP_KEY}, sample::Sample};
 
 use self::{auction::redelegate, commons::UREF_ADDR};
 
@@ -17,6 +15,7 @@ mod auction;
 mod commons;
 mod generic;
 mod native_transfer;
+mod native_delegate;
 pub(crate) mod sign_message;
 mod system_payment;
 
@@ -36,6 +35,34 @@ const MAX_DEPS_COUNT: u8 = 10;
 // From the chainspec.
 const MIN_APPROVALS_COUNT: u8 = 1;
 const MAX_APPROVALS_COUNT: u8 = 10;
+
+/// Represents native delegation sample.
+#[derive(Clone, Debug)]
+struct NativeDelegate {
+    delegator: PublicKey,
+    validator: PublicKey,
+    amount: U512,
+}
+
+impl NativeDelegate {
+    pub fn new(delegator: PublicKey, validator: PublicKey, amount: U512) -> Self {
+        Self {
+            delegator,
+            validator,
+            amount
+        }
+    }
+}
+
+impl From<NativeDelegate> for RuntimeArgs {
+    fn from(d: NativeDelegate) -> Self {
+        let mut args = RuntimeArgs::new();
+        args.insert("delegator", d.delegator).unwrap();
+        args.insert("validator", d.validator).unwrap();
+        args.insert("amount", d.amount).unwrap();
+        args
+    }
+}
 
 /// Represents native transfer sample.
 #[derive(Clone, Debug)]
@@ -215,6 +242,48 @@ fn make_deploy_sample(
     sample
 }
 
+fn make_v1_sample(
+    meta: Sample<TransactionV1Meta>,
+    pricing_mode: PricingMode,
+    ttl: TimeDiff,
+    signing_keys: &[SecretKey],
+) -> Sample<Transaction> {
+    let (main_key, _) = signing_keys.split_at(1);
+    let (label, meta, is_valid) = meta.destructure();
+    let initiator_addr = InitiatorAddr::PublicKey(PublicKey::from(&main_key[0]));
+
+    let fields = {
+        let mut fields: BTreeMap<u16, Bytes> = BTreeMap::new();
+        let args = TransactionArgs::Named(meta.args.into_named().unwrap());
+        fields.insert(ARGS_MAP_KEY, args.to_bytes().unwrap().into());
+        fields.insert(ENTRY_POINT_MAP_KEY, meta.entry_point.to_bytes().unwrap().into(),);
+        fields.insert(TARGET_MAP_KEY, meta.target.to_bytes().unwrap().into());
+        fields.insert(SCHEDULING_MAP_KEY, meta.scheduling.to_bytes().unwrap().into());
+        fields
+    };
+
+    let payload = TransactionV1Payload::new(
+        "mainnet".into(),
+        Timestamp::from_str("2021-05-04T14:20:35.104Z").unwrap(),
+        ttl,
+        pricing_mode,
+        initiator_addr,
+        fields
+    );
+
+    let mut transaction_v1 = TransactionV1::new(
+        Digest::hash([1u8; 32]).into(),
+        payload,
+        BTreeSet::new()
+    );
+
+    transaction_v1.sign(&main_key[0]);
+
+    let transaction = Transaction::V1(transaction_v1);
+
+    Sample::new(label, transaction, is_valid)
+}
+
 fn make_dependencies(count: u8) -> Vec<DeployHash> {
     if count == 0 {
         return vec![];
@@ -243,7 +312,7 @@ fn random_keys(key_count: u8) -> Vec<SecretKey> {
 // Given input collections for session samples and payment samples,
 // returns a combination of all - every session samples is matched with every payment sample,
 // creating n^2 deploy samples.
-fn construct_samples<R: Rng>(
+fn construct_deploy_samples<R: Rng>(
     rng: &mut R,
     session_samples: Vec<Sample<ExecutableDeployItem>>,
     payment_samples: Vec<Sample<ExecutableDeployItem>>,
@@ -280,14 +349,77 @@ fn construct_samples<R: Rng>(
     samples
 }
 
-pub(crate) fn redelegate_samples<R: Rng>(rng: &mut R) -> Vec<Sample<Transaction>> {
+fn construct_transaction_samples<R: Rng>(
+    rng: &mut R,
+    transaction_metas: Vec<Sample<TransactionV1Meta>>,
+) -> Vec<Sample<Transaction>> {
+    let mut samples = vec![];
+
+    // These params do not change validity of a sample.
+    let mut ttls = [MIN_TTL, TTL_HOUR, MAX_TTL];
+    let mut key_count = [MIN_APPROVALS_COUNT, 3, MAX_APPROVALS_COUNT];
+
+    for meta in transaction_metas {
+        // Random number of keys.
+        key_count.shuffle(rng);
+
+        // Random signing keys count.
+        let mut keys: Vec<SecretKey> = random_keys(*key_count.first().unwrap());
+        
+        // Randomize order of keys, so that both alg have chance to be the main one.
+        keys.shuffle(rng);
+
+        // Pick a random TTL value.
+        ttls.shuffle(rng);
+        let ttl = ttls.first().cloned().unwrap();
+
+        // TODO: Verify payment params later
+        let sample_transaction_payment_limited = make_v1_sample(
+            meta.clone(),
+            PricingMode::PaymentLimited {
+                payment_amount: 10_000,
+                gas_price_tolerance: 100,
+                standard_payment: false
+            },
+            ttl,
+            &keys
+        );
+
+        let sample_transaction_fixed = make_v1_sample(
+            meta.clone(),
+            PricingMode::Fixed {
+                additional_computation_factor: 1,
+                gas_price_tolerance: 100,
+            },
+            ttl,
+            &keys
+        );
+
+        let sample_transaction_prepaid = make_v1_sample(
+            meta.clone(),
+            PricingMode::Prepaid {
+                receipt: Digest::from_raw([1u8; 32])
+            },
+            ttl,
+            &keys
+        );
+
+        samples.push(sample_transaction_payment_limited);
+        samples.push(sample_transaction_fixed);
+        samples.push(sample_transaction_prepaid);
+    }
+
+    samples
+}
+
+pub(crate) fn deploy_redelegate_samples<R: Rng>(rng: &mut R) -> Vec<Sample<Transaction>> {
     let valid_samples = redelegate::valid();
     let valid_payment_samples = vec![system_payment::valid()];
 
-    let mut samples = construct_samples(rng, valid_samples, valid_payment_samples);
+    let mut samples = construct_deploy_samples(rng, valid_samples, valid_payment_samples);
     let invalid_samples = redelegate::invalid();
     let invalid_payment_samples = vec![system_payment::invalid(), system_payment::valid()];
-    samples.extend(construct_samples(
+    samples.extend(construct_deploy_samples(
         rng,
         invalid_samples,
         invalid_payment_samples,
@@ -295,16 +427,16 @@ pub(crate) fn redelegate_samples<R: Rng>(rng: &mut R) -> Vec<Sample<Transaction>
     samples
 }
 
-pub(crate) fn generic_samples<R: Rng>(rng: &mut R) -> Vec<Sample<Transaction>> {
+pub(crate) fn deploy_generic_samples<R: Rng>(rng: &mut R) -> Vec<Sample<Transaction>> {
     let valid_samples = generic::valid(rng);
     let valid_payment_samples = vec![system_payment::valid()];
 
-    let mut samples = construct_samples(rng, valid_samples.clone(), valid_payment_samples);
+    let mut samples = construct_deploy_samples(rng, valid_samples.clone(), valid_payment_samples);
 
     // Generic transactions are invalid only if their payment contract is invalid.
     // Otherwise there are no rules that could be violated and make txn invalid -
     // if it has correct structure it's valid b/c we don't know what the contracts expect.
-    samples.extend(construct_samples(
+    samples.extend(construct_deploy_samples(
         rng,
         valid_samples,
         vec![system_payment::invalid()],
@@ -312,11 +444,11 @@ pub(crate) fn generic_samples<R: Rng>(rng: &mut R) -> Vec<Sample<Transaction>> {
     samples
 }
 
-pub(crate) fn native_transfer_samples<R: Rng>(rng: &mut R) -> Vec<Sample<Transaction>> {
+pub(crate) fn deploy_native_transfer_samples<R: Rng>(rng: &mut R) -> Vec<Sample<Transaction>> {
     let mut native_transfer_samples =
-        construct_samples(rng, native_transfer::valid(), vec![system_payment::valid()]);
+        construct_deploy_samples(rng, native_transfer::valid(), vec![system_payment::valid()]);
 
-    native_transfer_samples.extend(construct_samples(
+    native_transfer_samples.extend(construct_deploy_samples(
         rng,
         native_transfer::invalid(),
         vec![system_payment::invalid(), system_payment::valid()],
@@ -324,11 +456,11 @@ pub(crate) fn native_transfer_samples<R: Rng>(rng: &mut R) -> Vec<Sample<Transac
     native_transfer_samples
 }
 
-pub(crate) fn delegate_samples<R: Rng>(rng: &mut R) -> Vec<Sample<Transaction>> {
+pub(crate) fn deploy_delegate_samples<R: Rng>(rng: &mut R) -> Vec<Sample<Transaction>> {
     let mut delegate_samples =
-        construct_samples(rng, delegate::valid(), vec![system_payment::valid()]);
+        construct_deploy_samples(rng, delegate::valid(), vec![system_payment::valid()]);
 
-    delegate_samples.extend(construct_samples(
+    delegate_samples.extend(construct_deploy_samples(
         rng,
         delegate::invalid(),
         vec![system_payment::invalid(), system_payment::valid()],
@@ -337,15 +469,28 @@ pub(crate) fn delegate_samples<R: Rng>(rng: &mut R) -> Vec<Sample<Transaction>> 
     delegate_samples
 }
 
-pub(crate) fn undelegate_samples<R: Rng>(rng: &mut R) -> Vec<Sample<Transaction>> {
+pub(crate) fn deploy_undelegate_samples<R: Rng>(rng: &mut R) -> Vec<Sample<Transaction>> {
     let mut undelegate_samples =
-        construct_samples(rng, undelegate::valid(), vec![system_payment::valid()]);
+        construct_deploy_samples(rng, undelegate::valid(), vec![system_payment::valid()]);
 
-    undelegate_samples.extend(construct_samples(
+    undelegate_samples.extend(construct_deploy_samples(
         rng,
         undelegate::invalid(),
         vec![system_payment::invalid(), system_payment::valid()],
     ));
 
     undelegate_samples
+}
+
+pub(crate) fn native_delegate_samples<R: Rng>(rng: &mut R) -> Vec<Sample<Transaction>> {
+    let mut native_delegate_samples = construct_transaction_samples(
+        rng,
+        native_delegate::valid()
+    );
+
+    native_delegate_samples.extend(construct_transaction_samples(
+        rng,
+        native_delegate::invalid(),
+    ));
+    native_delegate_samples
 }

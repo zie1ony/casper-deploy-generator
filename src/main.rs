@@ -8,7 +8,7 @@ use ledger::{LimitedLedgerConfig, ZondaxRepr};
 use parser::v1::{ARGS_MAP_KEY, ENTRY_POINT_MAP_KEY, SCHEDULING_MAP_KEY, TARGET_MAP_KEY};
 use sample::Sample;
 use test_data::{
-    delegate_samples, generic_samples, native_transfer_samples, redelegate_samples, sign_message::{invalid_casper_message_sample, valid_casper_message_sample}, undelegate_samples
+    deploy_delegate_samples, deploy_generic_samples, deploy_native_transfer_samples, deploy_redelegate_samples, deploy_undelegate_samples, native_delegate_samples, sign_message::{invalid_casper_message_sample, valid_casper_message_sample}
 };
 
 pub mod checksummed_hex;
@@ -20,27 +20,19 @@ mod sample;
 mod test_data;
 mod utils;
 
-fn transaction_deploys() -> impl Iterator<Item = Sample<Deploy>> {
+fn transaction_deploys() -> impl Iterator<Item = Sample<Transaction>> {
     // Single rng is created here and used for all generators to minimize diff per old Deploy test vectors.
     let mut rng = DeterministicTestRng::default();
 
-    undelegate_samples(&mut rng)
+    deploy_undelegate_samples(&mut rng)
         .into_iter()
-        .chain(delegate_samples(&mut rng))
-        .chain(native_transfer_samples(&mut rng))
-        .chain(redelegate_samples(&mut rng))
-        .chain(generic_samples(&mut rng))
-        .map(|sample| {
-            let (label, transaction, valid) = sample.destructure();
-            let deploy = match transaction {
-                Transaction::Deploy(deploy) => deploy,
-                _ => unreachable!(),
-            };
-            Sample::new(label, deploy, valid)
-        })
+        .chain(deploy_delegate_samples(&mut rng))
+        .chain(deploy_native_transfer_samples(&mut rng))
+        .chain(deploy_redelegate_samples(&mut rng))
+        .chain(deploy_generic_samples(&mut rng))
 }
 
-fn deploy_to_v1(sample: Sample<Transaction>, ep: TransactionEntryPoint, new_suffix: &'static str) -> Result<Sample<Transaction>, ()> {
+fn deploy_to_v1_generic(sample: Sample<Transaction>, ep: TransactionEntryPoint, new_suffix: &'static str) -> Result<Sample<Transaction>, ()> {
     let (mut label, transaction_deploy, is_valid) = sample.destructure();
 
     let deploy = match transaction_deploy {
@@ -118,6 +110,7 @@ fn deploy_to_v1(sample: Sample<Transaction>, ep: TransactionEntryPoint, new_suff
             TransactionTarget::Native
         },
     };
+
     let scheduling = TransactionScheduling::Standard;
     let fields = {
         let mut fields: BTreeMap<u16, Bytes> = BTreeMap::new();
@@ -146,21 +139,10 @@ fn deploy_to_v1(sample: Sample<Transaction>, ep: TransactionEntryPoint, new_suff
     Ok(Sample::new(label, transaction, is_valid))
 }
 
-fn delegate_samples_v1(rng: &mut DeterministicTestRng) -> Vec<Sample<Transaction>> {
-    delegate_samples(rng)
-        .into_iter()
-        .filter_map(|sample| deploy_to_v1(
-            sample,
-            TransactionEntryPoint::Delegate,
-            "_delegate_sample_v1"
-        ).ok())
-        .collect()
-}
-
 fn native_transfer_samples_v1(rng: &mut DeterministicTestRng) -> Vec<Sample<Transaction>> {
-    native_transfer_samples(rng)
+    deploy_native_transfer_samples(rng)
         .into_iter()
-        .filter_map(|sample| deploy_to_v1(
+        .filter_map(|sample| deploy_to_v1_generic(
             sample,
             TransactionEntryPoint::Transfer,
             "_native_transfer_sample_v1"
@@ -168,21 +150,10 @@ fn native_transfer_samples_v1(rng: &mut DeterministicTestRng) -> Vec<Sample<Tran
         .collect()
 }
 
-fn redelegate_samples_v1(rng: &mut DeterministicTestRng) -> Vec<Sample<Transaction>> {
-    redelegate_samples(rng)
-        .into_iter()
-        .filter_map(|sample| deploy_to_v1(
-            sample, 
-            TransactionEntryPoint::Redelegate,
-            "_redelegate_sample_v1"
-        ).ok())
-        .collect()
-}
-
 fn generic_samples_v1(rng: &mut DeterministicTestRng) -> Vec<Sample<Transaction>> {
-    generic_samples(rng)
+    deploy_generic_samples(rng)
         .into_iter()
-        .filter_map(|sample| deploy_to_v1(
+        .filter_map(|sample| deploy_to_v1_generic(
             sample,
             TransactionEntryPoint::Custom("generic-txn-entrypoint".into()),
             "_generic_sample_v1"
@@ -194,9 +165,7 @@ fn transaction_v1s() -> impl Iterator<Item = Sample<Transaction>> {
     // Single rng is created here and used for all generators to minimize diff per old Deploy test vectors.
     let mut rng = DeterministicTestRng::default();
 
-    delegate_samples_v1(&mut rng).into_iter()
-        .chain(native_transfer_samples_v1(&mut rng))
-        .chain(redelegate_samples_v1(&mut rng))
+    native_delegate_samples(&mut rng).into_iter()
         .chain(generic_samples_v1(&mut rng))
 }
 
@@ -209,7 +178,7 @@ fn main() {
     let mut data: Vec<ZondaxRepr> = vec![];
 
     for sample_transaction in transaction_deploys() {
-        data.push(ledger::deploy_to_json(
+        data.push(ledger::transaction_to_json(
             id,
             sample_transaction,
             &limited_ledger_config,

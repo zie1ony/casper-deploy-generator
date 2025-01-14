@@ -1,6 +1,6 @@
 use casper_types::{RuntimeArgs, TransactionArgs};
 
-use crate::{ledger::{Element, TxnPhase}, parser::runtime_args::{identity, parse_amount, parse_optional_arg}};
+use crate::{ledger::Element, parser::runtime_args::{identity, parse_amount, parse_optional_arg}};
 
 use super::{v1_type, TransactionV1Meta};
 
@@ -13,7 +13,7 @@ where
 {
     let mut elements = vec![];
     elements.extend(
-        v1_type(TxnPhase::Session, v1)
+        v1_type(v1)
             .into_iter()
             .map(|mut e| {
                 e.as_expert();
