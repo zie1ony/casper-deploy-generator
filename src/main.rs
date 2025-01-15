@@ -8,7 +8,7 @@ use ledger::{LimitedLedgerConfig, ZondaxRepr};
 use parser::v1::{ARGS_MAP_KEY, ENTRY_POINT_MAP_KEY, SCHEDULING_MAP_KEY, TARGET_MAP_KEY};
 use sample::Sample;
 use test_data::{
-    deploy_delegate_samples, deploy_generic_samples, deploy_native_transfer_samples, deploy_redelegate_samples, deploy_undelegate_samples, native_delegate_samples, sign_message::{invalid_casper_message_sample, valid_casper_message_sample}
+    deploy_delegate_samples, deploy_generic_samples, deploy_native_transfer_samples, deploy_redelegate_samples, deploy_undelegate_samples, native_delegate_samples, native_redelegate_samples, native_undelegate_samples, sign_message::{invalid_casper_message_sample, valid_casper_message_sample}, v1_native_transfer_samples
 };
 
 pub mod checksummed_hex;
@@ -139,17 +139,6 @@ fn deploy_to_v1_generic(sample: Sample<Transaction>, ep: TransactionEntryPoint, 
     Ok(Sample::new(label, transaction, is_valid))
 }
 
-fn native_transfer_samples_v1(rng: &mut DeterministicTestRng) -> Vec<Sample<Transaction>> {
-    deploy_native_transfer_samples(rng)
-        .into_iter()
-        .filter_map(|sample| deploy_to_v1_generic(
-            sample,
-            TransactionEntryPoint::Transfer,
-            "_native_transfer_sample_v1"
-        ).ok())
-        .collect()
-}
-
 fn generic_samples_v1(rng: &mut DeterministicTestRng) -> Vec<Sample<Transaction>> {
     deploy_generic_samples(rng)
         .into_iter()
@@ -165,7 +154,10 @@ fn transaction_v1s() -> impl Iterator<Item = Sample<Transaction>> {
     // Single rng is created here and used for all generators to minimize diff per old Deploy test vectors.
     let mut rng = DeterministicTestRng::default();
 
-    native_delegate_samples(&mut rng).into_iter()
+    v1_native_transfer_samples(&mut rng).into_iter()
+        .chain(native_delegate_samples(&mut rng))
+        .chain(native_undelegate_samples(&mut rng))
+        .chain(native_redelegate_samples(&mut rng))
         .chain(generic_samples_v1(&mut rng))
 }
 

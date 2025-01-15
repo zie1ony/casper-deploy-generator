@@ -1,7 +1,7 @@
 use std::{collections::{BTreeMap, BTreeSet}, str::FromStr};
 
 use casper_types::{
-    account::AccountHash, bytesrepr::{Bytes, ToBytes}, AccessRights, AsymmetricType, CLValue, Deploy, DeployHash, DeployHeader, Digest, ExecutableDeployItem, InitiatorAddr, Key, PricingMode, PublicKey, RuntimeArgs, SecretKey, TimeDiff, Timestamp, Transaction, TransactionArgs, TransactionEntryPoint, TransactionScheduling, TransactionTarget, TransactionV1, TransactionV1Payload, URef, U512
+    bytesrepr::{Bytes, ToBytes}, Deploy, DeployHash, DeployHeader, Digest, ExecutableDeployItem, InitiatorAddr, PricingMode, PublicKey, SecretKey, TimeDiff, Timestamp, Transaction, TransactionArgs, TransactionV1, TransactionV1Payload,
 };
 use rand::{prelude::*, Rng};
 
@@ -9,13 +9,13 @@ use auction::{delegate, undelegate};
 
 use crate::{parser::v1::{TransactionV1Meta, ARGS_MAP_KEY, ENTRY_POINT_MAP_KEY, SCHEDULING_MAP_KEY, TARGET_MAP_KEY}, sample::Sample};
 
-use self::{auction::redelegate, commons::UREF_ADDR};
+use self::auction::redelegate;
 
+mod native_v1;
 mod auction;
 mod commons;
 mod generic;
-mod native_transfer;
-mod native_delegate;
+pub(crate) mod native_transfer;
 pub(crate) mod sign_message;
 mod system_payment;
 
@@ -35,170 +35,6 @@ const MAX_DEPS_COUNT: u8 = 10;
 // From the chainspec.
 const MIN_APPROVALS_COUNT: u8 = 1;
 const MAX_APPROVALS_COUNT: u8 = 10;
-
-/// Represents native delegation sample.
-#[derive(Clone, Debug)]
-struct NativeDelegate {
-    delegator: PublicKey,
-    validator: PublicKey,
-    amount: U512,
-}
-
-impl NativeDelegate {
-    pub fn new(delegator: PublicKey, validator: PublicKey, amount: U512) -> Self {
-        Self {
-            delegator,
-            validator,
-            amount
-        }
-    }
-}
-
-impl From<NativeDelegate> for RuntimeArgs {
-    fn from(d: NativeDelegate) -> Self {
-        let mut args = RuntimeArgs::new();
-        args.insert("delegator", d.delegator).unwrap();
-        args.insert("validator", d.validator).unwrap();
-        args.insert("amount", d.amount).unwrap();
-        args
-    }
-}
-
-/// Represents native transfer sample.
-#[derive(Clone, Debug)]
-struct NativeTransfer {
-    target: TransferTarget,
-    amount: U512,
-    id: u64,
-    source: TransferSource,
-}
-
-impl NativeTransfer {
-    fn new(target: TransferTarget, amount: U512, id: u64, source: TransferSource) -> Self {
-        NativeTransfer {
-            target,
-            amount,
-            id,
-            source,
-        }
-    }
-}
-
-impl From<NativeTransfer> for RuntimeArgs {
-    fn from(nt: NativeTransfer) -> Self {
-        let mut ra = RuntimeArgs::new();
-        ra.insert("amount", nt.amount).unwrap();
-        ra.insert("id", Some(nt.id)).unwrap();
-        if let TransferSource::URef(uref) = nt.source {
-            ra.insert("source", uref).unwrap();
-        }
-        ra.insert_cl_value("target", nt.target.into_cl());
-        ra
-    }
-}
-
-#[derive(Clone, Debug)]
-enum TransferSource {
-    // Transfer source is account's main purse.
-    None,
-    // Transfer source is a defined purse.
-    URef(URef),
-}
-
-impl TransferSource {
-    pub fn uref(uref: URef) -> Self {
-        TransferSource::URef(uref)
-    }
-
-    pub fn none() -> Self {
-        TransferSource::None
-    }
-
-    pub fn label(&self) -> &str {
-        match self {
-            TransferSource::None => "source_none",
-            TransferSource::URef(_) => "source_uref",
-        }
-    }
-}
-
-#[derive(Clone, Debug)]
-enum TransferTarget {
-    // raw bytes representing account hash
-    Bytes([u8; 32]),
-    // transfer to a specific purse
-    URef(URef),
-    // transfer to an account.
-    Key(Key),
-    // transfer to public key
-    PublicKey(PublicKey),
-}
-
-impl TransferTarget {
-    fn into_cl(self) -> CLValue {
-        let cl_value_res = match self {
-            TransferTarget::Bytes(bytes) => CLValue::from_t(bytes),
-            TransferTarget::URef(uref) => CLValue::from_t(uref),
-            TransferTarget::Key(key) => CLValue::from_t(key),
-            TransferTarget::PublicKey(pk) => CLValue::from_t(pk),
-        };
-        cl_value_res.unwrap()
-    }
-
-    fn bytes() -> TransferTarget {
-        TransferTarget::Bytes([255u8; 32])
-    }
-
-    fn uref() -> TransferTarget {
-        let uref = URef::new(UREF_ADDR, AccessRights::READ_ADD_WRITE);
-        TransferTarget::URef(uref)
-    }
-
-    fn key() -> TransferTarget {
-        let account_key = Key::Account(
-            AccountHash::from_formatted_str(
-                "account-hash-45f3aa6ce2a450dd5a4f2cc4cc9054aded66de6b6cfc4ad977e7251cf94b649b",
-            )
-            .unwrap(),
-        );
-        TransferTarget::Key(account_key)
-    }
-
-    fn public_key_ed25519() -> TransferTarget {
-        let public_key = PublicKey::ed25519_from_bytes(
-            hex::decode(b"2bac1d0ff9240ff0b7b06d555815640497861619ca12583ddef434885416e69b")
-                .unwrap(),
-        )
-        .unwrap();
-        TransferTarget::PublicKey(public_key)
-    }
-
-    fn public_key_secp256k1() -> TransferTarget {
-        let public_key = PublicKey::secp256k1_from_bytes(
-            hex::decode(b"026e1b7a8e3243f5ff14e825b0fde15103588bb61e6ae99084968b017118e0504f")
-                .unwrap(),
-        )
-        .unwrap();
-        TransferTarget::PublicKey(public_key)
-    }
-
-    fn label(&self) -> String {
-        match self {
-            TransferTarget::Bytes(_) => "target_bytes".to_string(),
-            TransferTarget::URef(_) => "target_uref".to_string(),
-            TransferTarget::Key(_) => "target_key_account".to_string(),
-            TransferTarget::PublicKey(pk) => {
-                let variant = match pk {
-                    PublicKey::Ed25519(_) => "ed25519",
-                    PublicKey::Secp256k1(_) => "secp256k1",
-                    PublicKey::System => panic!("unexpected key type variant"),
-                    _ => panic!("Should not happen"),
-                };
-                format!("target_{}_public_key", variant)
-            }
-        }
-    }
-}
 
 /// Returns a sample `Deploy`, given the input data.
 fn make_deploy_sample(
@@ -482,15 +318,52 @@ pub(crate) fn deploy_undelegate_samples<R: Rng>(rng: &mut R) -> Vec<Sample<Trans
     undelegate_samples
 }
 
+pub(crate) fn v1_native_transfer_samples<R: Rng>(rng: &mut R) -> Vec<Sample<Transaction>> {
+    let mut native_transfer_samples =
+        construct_transaction_samples(rng, native_v1::transfer::valid());
+
+    native_transfer_samples.extend(construct_transaction_samples(
+        rng,
+        native_v1::transfer::invalid(),
+    ));
+    native_transfer_samples
+}
+
 pub(crate) fn native_delegate_samples<R: Rng>(rng: &mut R) -> Vec<Sample<Transaction>> {
     let mut native_delegate_samples = construct_transaction_samples(
         rng,
-        native_delegate::valid()
+        native_v1::delegate::valid()
     );
 
     native_delegate_samples.extend(construct_transaction_samples(
         rng,
-        native_delegate::invalid(),
+        native_v1::delegate::invalid(),
     ));
     native_delegate_samples
+}
+
+pub(crate) fn native_undelegate_samples<R: Rng>(rng: &mut R) -> Vec<Sample<Transaction>> {
+    let mut native_undelegate_samples = construct_transaction_samples(
+        rng,
+        native_v1::undelegate::valid()
+    );
+
+    native_undelegate_samples.extend(construct_transaction_samples(
+        rng,
+        native_v1::undelegate::invalid(),
+    ));
+    native_undelegate_samples
+}
+
+pub(crate) fn native_redelegate_samples<R: Rng>(rng: &mut R) -> Vec<Sample<Transaction>> {
+    let mut native_redelegate_samples = construct_transaction_samples(
+        rng,
+        native_v1::redelegate::valid()
+    );
+
+    native_redelegate_samples.extend(construct_transaction_samples(
+        rng,
+        native_v1::redelegate::invalid(),
+    ));
+    native_redelegate_samples
 }

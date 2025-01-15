@@ -84,48 +84,52 @@ pub(crate) fn parse_v1_payload(payload: &TransactionV1Payload) -> Vec<Element> {
 pub(crate) fn parse_v1_meta(v1: &TransactionV1) -> Vec<Element> {
     let meta = TransactionV1Meta::deserialize_from(v1);
 
-    match meta.entry_point {
-        TransactionEntryPoint::Delegate => parse_delegation(&meta),
-        TransactionEntryPoint::Undelegate => parse_undelegation(&meta),
-        TransactionEntryPoint::Redelegate => parse_redelegation(&meta),
-        _ => {
-            let mut elements: Vec<Element> = v1_type(&meta);
-            match meta.target {
-                TransactionTarget::Native => {
+    match &meta.target {
+        TransactionTarget::Native => {
+            match meta.entry_point {
+                TransactionEntryPoint::Transfer => {
                     let args = meta.args.as_named().unwrap();
-                    match meta.entry_point {
-                        TransactionEntryPoint::Transfer => {
-                            elements.extend(parse_transfer_args(args));
-                            let args_sans_transfer = remove_transfer_args(args.clone());
-                            if !args_sans_transfer.is_empty() {
-                                elements.extend(parse_runtime_args_v1(args));
-                            }
-                        },
-                        _ => panic!("unsupported entry point {:?} in native transaction", meta.entry_point)
-                    }
-                },
-                TransactionTarget::Stored { .. } => {
-                    let args = meta.args.as_named().unwrap();
-                    elements.push(entrypoint(&meta.entry_point.to_string()));
-                    elements.extend(parse_amount(args));
-                    elements.extend(parse_runtime_args_v1(args));
-                },
-                TransactionTarget::Session { module_bytes, .. } => {
-                    let args = meta.args.as_named().unwrap();
-                    if is_system_payment(&module_bytes) {
-                        elements.extend(parse_fee(args));
-                        let args_sans_amount = remove_amount_arg(args.clone());
-                        if !args_sans_amount.is_empty() {
-                            elements.extend(parse_runtime_args_v1(args));
-                        }  
-                    } else {
-                        elements.extend(parse_amount(args));
+                    let mut elements: Vec<Element> = v1_type(&meta);
+                    elements.extend(parse_transfer_args(args));
+                    let args_sans_transfer = remove_transfer_args(args.clone());
+                    if !args_sans_transfer.is_empty() {
                         elements.extend(parse_runtime_args_v1(args));
                     }
+                    elements
                 },
+                TransactionEntryPoint::Delegate => parse_delegation(&meta),
+                TransactionEntryPoint::Undelegate => parse_undelegation(&meta),
+                TransactionEntryPoint::Redelegate => parse_redelegation(&meta),
+                _ => panic!("Generator doesn't support the native entrypoint '{}'", meta.entry_point)
+            }
+        },
+        TransactionTarget::Stored { .. } => {
+            let args = meta.args.as_named().unwrap();
+            let mut elements: Vec<Element> = v1_type(&meta);
+            let entry_point_str = meta
+                .entry_point
+                .custom_entry_point()
+                .unwrap();
+            elements.push(entrypoint(&entry_point_str));
+            elements.extend(parse_amount(args));
+            elements.extend(parse_runtime_args_v1(args));
+            elements
+        },
+        TransactionTarget::Session { module_bytes, .. } => {
+            let args = meta.args.as_named().unwrap();
+            let mut elements: Vec<Element> = v1_type(&meta);
+            if is_system_payment(&module_bytes) {
+                elements.extend(parse_fee(args));
+                let args_sans_amount = remove_amount_arg(args.clone());
+                if !args_sans_amount.is_empty() {
+                    elements.extend(parse_runtime_args_v1(args));
+                }  
+            } else {
+                elements.extend(parse_amount(args));
+                elements.extend(parse_runtime_args_v1(args));
             }
             elements
-        }
+        },
     }
 }
 
