@@ -1,4 +1,7 @@
-use casper_types::{runtime_args, AsymmetricType, PublicKey, RuntimeArgs, TransactionArgs, TransactionEntryPoint, TransactionScheduling, TransactionTarget, U512};
+use casper_types::{
+    runtime_args, AsymmetricType, PublicKey, RuntimeArgs, TransactionArgs, TransactionEntryPoint,
+    TransactionScheduling, TransactionTarget, U512,
+};
 
 use crate::sample::Sample;
 
@@ -17,7 +20,7 @@ impl NativeUndelegate {
         Self {
             delegator,
             validator,
-            amount
+            amount,
         }
     }
 }
@@ -43,7 +46,7 @@ fn native_undelegate_samples(
     for amount in amounts {
         for validator in validators {
             for delegator in delegators {
-                let label = format!("native_undelegate_v1");
+                let label = "native_undelegate_v1".to_string();
                 let nt = NativeUndelegate::new(delegator.clone(), validator.clone(), *amount);
                 let sample = Sample::new(label, nt, true);
                 samples.push(sample);
@@ -83,7 +86,7 @@ pub(crate) fn valid() -> Vec<Sample<TransactionV1Meta>> {
                     TransactionArgs::Named(sample.into()),
                     TransactionTarget::Native,
                     TransactionEntryPoint::Undelegate,
-                    TransactionScheduling::Standard
+                    TransactionScheduling::Standard,
                 ),
                 validity,
             )
@@ -105,18 +108,18 @@ pub(crate) fn invalid() -> Vec<Sample<TransactionV1Meta>> {
 
     let missing_required_validator = runtime_args! {
         "delegator" => valid_delegator.clone(),
-        "amount" => valid_amount.clone(),
+        "amount" => valid_amount,
     };
 
     let missing_required_delegator = runtime_args! {
         "validator" => valid_validator.clone(),
-        "amount" => valid_amount.clone(),
+        "amount" => valid_amount,
     };
 
     let invalid_amount_type = runtime_args! {
         "amount" => 10000u64,
         "validator" => valid_validator.clone(),
-        "amount" => valid_amount.clone(),
+        "amount" => valid_amount,
     };
 
     let invalid_transfer_args: Vec<Sample<RuntimeArgs>> = vec![
@@ -134,7 +137,7 @@ pub(crate) fn invalid() -> Vec<Sample<TransactionV1Meta>> {
                 TransactionArgs::Named(ra),
                 TransactionTarget::Native,
                 TransactionEntryPoint::Undelegate,
-                TransactionScheduling::Standard
+                TransactionScheduling::Standard,
             );
             let new_label = format!("native_undelegate_{}", label);
             Sample::new(new_label, sample_invalid_delegate, validity)

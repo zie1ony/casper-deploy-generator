@@ -1,21 +1,32 @@
-use std::{collections::{BTreeMap, BTreeSet}, str::FromStr};
+use std::{
+    collections::{BTreeMap, BTreeSet},
+    str::FromStr,
+};
 
 use casper_types::{
-    bytesrepr::{Bytes, ToBytes}, Deploy, DeployHash, DeployHeader, Digest, ExecutableDeployItem, InitiatorAddr, PricingMode, PublicKey, SecretKey, TimeDiff, Timestamp, Transaction, TransactionArgs, TransactionV1, TransactionV1Payload,
+    bytesrepr::{Bytes, ToBytes},
+    Deploy, DeployHash, DeployHeader, Digest, ExecutableDeployItem, InitiatorAddr, PricingMode,
+    PublicKey, SecretKey, TimeDiff, Timestamp, Transaction, TransactionArgs, TransactionV1,
+    TransactionV1Payload,
 };
 use rand::{prelude::*, Rng};
 
 use auction::{delegate, undelegate};
 
-use crate::{parser::v1::{TransactionV1Meta, ARGS_MAP_KEY, ENTRY_POINT_MAP_KEY, SCHEDULING_MAP_KEY, TARGET_MAP_KEY}, sample::Sample};
+use crate::{
+    parser::v1::{
+        TransactionV1Meta, ARGS_MAP_KEY, ENTRY_POINT_MAP_KEY, SCHEDULING_MAP_KEY, TARGET_MAP_KEY,
+    },
+    sample::Sample,
+};
 
 use self::auction::redelegate;
 
-mod native_v1;
 mod auction;
 mod commons;
 mod generic;
 pub(crate) mod native_transfer;
+mod native_v1;
 pub(crate) mod sign_message;
 mod system_payment;
 
@@ -92,9 +103,15 @@ fn make_v1_sample(
         let mut fields: BTreeMap<u16, Bytes> = BTreeMap::new();
         let args = TransactionArgs::Named(meta.args.into_named().unwrap());
         fields.insert(ARGS_MAP_KEY, args.to_bytes().unwrap().into());
-        fields.insert(ENTRY_POINT_MAP_KEY, meta.entry_point.to_bytes().unwrap().into(),);
+        fields.insert(
+            ENTRY_POINT_MAP_KEY,
+            meta.entry_point.to_bytes().unwrap().into(),
+        );
         fields.insert(TARGET_MAP_KEY, meta.target.to_bytes().unwrap().into());
-        fields.insert(SCHEDULING_MAP_KEY, meta.scheduling.to_bytes().unwrap().into());
+        fields.insert(
+            SCHEDULING_MAP_KEY,
+            meta.scheduling.to_bytes().unwrap().into(),
+        );
         fields
     };
 
@@ -104,14 +121,11 @@ fn make_v1_sample(
         ttl,
         pricing_mode,
         initiator_addr,
-        fields
+        fields,
     );
 
-    let mut transaction_v1 = TransactionV1::new(
-        Digest::hash([1u8; 32]).into(),
-        payload,
-        BTreeSet::new()
-    );
+    let mut transaction_v1 =
+        TransactionV1::new(Digest::hash([1u8; 32]).into(), payload, BTreeSet::new());
 
     transaction_v1.sign(&main_key[0]);
 
@@ -201,7 +215,7 @@ fn construct_transaction_samples<R: Rng>(
 
         // Random signing keys count.
         let mut keys: Vec<SecretKey> = random_keys(*key_count.first().unwrap());
-        
+
         // Randomize order of keys, so that both alg have chance to be the main one.
         keys.shuffle(rng);
 
@@ -215,10 +229,10 @@ fn construct_transaction_samples<R: Rng>(
             PricingMode::PaymentLimited {
                 payment_amount: 10_000,
                 gas_price_tolerance: 100,
-                standard_payment: false
+                standard_payment: false,
             },
             ttl,
-            &keys
+            &keys,
         );
 
         let sample_transaction_fixed = make_v1_sample(
@@ -228,16 +242,16 @@ fn construct_transaction_samples<R: Rng>(
                 gas_price_tolerance: 100,
             },
             ttl,
-            &keys
+            &keys,
         );
 
         let sample_transaction_prepaid = make_v1_sample(
             meta.clone(),
             PricingMode::Prepaid {
-                receipt: Digest::from_raw([1u8; 32])
+                receipt: Digest::from_raw([1u8; 32]),
             },
             ttl,
-            &keys
+            &keys,
         );
 
         samples.push(sample_transaction_payment_limited);
@@ -330,10 +344,8 @@ pub(crate) fn v1_native_transfer_samples<R: Rng>(rng: &mut R) -> Vec<Sample<Tran
 }
 
 pub(crate) fn native_delegate_samples<R: Rng>(rng: &mut R) -> Vec<Sample<Transaction>> {
-    let mut native_delegate_samples = construct_transaction_samples(
-        rng,
-        native_v1::delegate::valid()
-    );
+    let mut native_delegate_samples =
+        construct_transaction_samples(rng, native_v1::delegate::valid());
 
     native_delegate_samples.extend(construct_transaction_samples(
         rng,
@@ -343,10 +355,8 @@ pub(crate) fn native_delegate_samples<R: Rng>(rng: &mut R) -> Vec<Sample<Transac
 }
 
 pub(crate) fn native_undelegate_samples<R: Rng>(rng: &mut R) -> Vec<Sample<Transaction>> {
-    let mut native_undelegate_samples = construct_transaction_samples(
-        rng,
-        native_v1::undelegate::valid()
-    );
+    let mut native_undelegate_samples =
+        construct_transaction_samples(rng, native_v1::undelegate::valid());
 
     native_undelegate_samples.extend(construct_transaction_samples(
         rng,
@@ -356,10 +366,8 @@ pub(crate) fn native_undelegate_samples<R: Rng>(rng: &mut R) -> Vec<Sample<Trans
 }
 
 pub(crate) fn native_redelegate_samples<R: Rng>(rng: &mut R) -> Vec<Sample<Transaction>> {
-    let mut native_redelegate_samples = construct_transaction_samples(
-        rng,
-        native_v1::redelegate::valid()
-    );
+    let mut native_redelegate_samples =
+        construct_transaction_samples(rng, native_v1::redelegate::valid());
 
     native_redelegate_samples.extend(construct_transaction_samples(
         rng,

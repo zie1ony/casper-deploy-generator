@@ -1,6 +1,15 @@
-use casper_types::{account::AccountHash, runtime_args, AccessRights, AsymmetricType, CLValue, ExecutableDeployItem, Key, PublicKey, RuntimeArgs, TransactionArgs, TransactionEntryPoint, TransactionScheduling, TransactionTarget, URef, U512};
+use casper_types::{
+    runtime_args, AccessRights, RuntimeArgs, TransactionArgs, TransactionEntryPoint,
+    TransactionScheduling, TransactionTarget, URef, U512,
+};
 
-use crate::{sample::Sample, test_data::{native_transfer::{native_transfer_samples, TransferSource, TransferTarget}, TransactionV1Meta}};
+use crate::{
+    sample::Sample,
+    test_data::{
+        native_transfer::{native_transfer_samples, TransferSource, TransferTarget},
+        TransactionV1Meta,
+    },
+};
 
 use super::super::commons::UREF_ADDR;
 
@@ -44,13 +53,9 @@ pub(crate) fn valid() -> Vec<Sample<TransactionV1Meta>> {
                 TransactionArgs::Named(sample.into()),
                 TransactionTarget::Native,
                 TransactionEntryPoint::Transfer,
-                TransactionScheduling::Standard
+                TransactionScheduling::Standard,
             );
-            Sample::new(
-                format!("v1_{label}"),
-                transaction,
-                validity,
-            )
+            Sample::new(format!("v1_{label}"), transaction, validity)
         })
         .collect()
 }
@@ -87,10 +92,10 @@ pub(crate) fn invalid() -> Vec<Sample<TransactionV1Meta>> {
         .map(|sample_ra| {
             let (label, ra, validity) = sample_ra.destructure();
             let transaction = TransactionV1Meta::new(
-                TransactionArgs::Named(ra), 
+                TransactionArgs::Named(ra),
                 TransactionTarget::Native,
                 TransactionEntryPoint::Transfer,
-                TransactionScheduling::Standard
+                TransactionScheduling::Standard,
             );
             let new_label = format!("v1_native_transfer_{}", label);
             Sample::new(new_label, transaction, validity)

@@ -1,4 +1,7 @@
-use casper_types::{runtime_args, AsymmetricType, PublicKey, RuntimeArgs, TransactionArgs, TransactionEntryPoint, TransactionScheduling, TransactionTarget, U512};
+use casper_types::{
+    runtime_args, AsymmetricType, PublicKey, RuntimeArgs, TransactionArgs, TransactionEntryPoint,
+    TransactionScheduling, TransactionTarget, U512,
+};
 
 use crate::sample::Sample;
 
@@ -14,12 +17,17 @@ struct NativeRedelegate {
 }
 
 impl NativeRedelegate {
-    pub fn new(delegator: PublicKey, validator: PublicKey, new_validator: PublicKey, amount: U512) -> Self {
+    pub fn new(
+        delegator: PublicKey,
+        validator: PublicKey,
+        new_validator: PublicKey,
+        amount: U512,
+    ) -> Self {
         Self {
             delegator,
             validator,
             new_validator,
-            amount
+            amount,
         }
     }
 }
@@ -50,12 +58,12 @@ fn native_undelegate_samples(
                     continue;
                 }
                 for delegator in delegators {
-                    let label = format!("native_redelegate_v1");
+                    let label = "native_redelegate_v1".to_string();
                     let nt = NativeRedelegate::new(
                         delegator.clone(),
                         validator_old.clone(),
                         validator_new.clone(),
-                        *amount
+                        *amount,
                     );
                     let sample = Sample::new(label, nt, true);
                     samples.push(sample);
@@ -96,7 +104,7 @@ pub(crate) fn valid() -> Vec<Sample<TransactionV1Meta>> {
                     TransactionArgs::Named(sample.into()),
                     TransactionTarget::Native,
                     TransactionEntryPoint::Redelegate,
-                    TransactionScheduling::Standard
+                    TransactionScheduling::Standard,
                 ),
                 validity,
             )
@@ -143,7 +151,7 @@ pub(crate) fn invalid() -> Vec<Sample<TransactionV1Meta>> {
         "amount" => 100000u32,
     };
 
-    let invalid_args= vec![
+    let invalid_args = vec![
         Sample::new("missing_amount", missing_required_amount, true),
         Sample::new("missing_delegator", missing_required_delegator, true),
         Sample::new("missing_validator", missing_required_validator, true),
@@ -163,7 +171,7 @@ pub(crate) fn invalid() -> Vec<Sample<TransactionV1Meta>> {
                 TransactionArgs::Named(ra),
                 TransactionTarget::Native,
                 TransactionEntryPoint::Redelegate,
-                TransactionScheduling::Standard
+                TransactionScheduling::Standard,
             );
             let new_label = format!("native_redelegate_{}", label);
             Sample::new(new_label, sample_invalid_delegate, validity)

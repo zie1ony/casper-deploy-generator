@@ -1,25 +1,21 @@
 use casper_types::{RuntimeArgs, TransactionArgs};
 
-use crate::{ledger::Element, parser::runtime_args::{identity, parse_amount, parse_optional_arg}};
+use crate::{
+    ledger::Element,
+    parser::runtime_args::{identity, parse_amount, parse_optional_arg},
+};
 
 use super::{v1_type, TransactionV1Meta};
 
-fn parse_auction_v1<'a, F>(
-    v1: &'a TransactionV1Meta,
-    args_parser: F,
-) -> Vec<Element>
+fn parse_auction_v1<'a, F>(v1: &'a TransactionV1Meta, args_parser: F) -> Vec<Element>
 where
     F: Fn(&'a RuntimeArgs) -> Vec<Element>,
 {
     let mut elements = vec![];
-    elements.extend(
-        v1_type(v1)
-            .into_iter()
-            .map(|mut e| {
-                e.as_expert();
-                e
-            }),
-    );
+    elements.extend(v1_type(v1).into_iter().map(|mut e| {
+        e.as_expert();
+        e
+    }));
     match &v1.args {
         TransactionArgs::Named(args) => elements.extend(args_parser(args)),
         TransactionArgs::Bytesrepr(_) => panic!(),

@@ -1,14 +1,22 @@
 use std::{collections::BTreeMap, convert::TryInto};
 
 use casper_types::{
-    bytesrepr::{Bytes, ToBytes}, ExecutableDeployItem, InitiatorAddr, PricingMode, Transaction, TransactionArgs, TransactionEntryPoint, TransactionInvocationTarget, TransactionRuntimeParams, TransactionScheduling, TransactionTarget, TransactionV1, TransactionV1Hash, TransactionV1Payload, U512
+    bytesrepr::{Bytes, ToBytes},
+    ExecutableDeployItem, InitiatorAddr, PricingMode, Transaction, TransactionArgs,
+    TransactionEntryPoint, TransactionInvocationTarget, TransactionRuntimeParams,
+    TransactionScheduling, TransactionTarget, TransactionV1, TransactionV1Hash,
+    TransactionV1Payload, U512,
 };
 use deterministic::DeterministicTestRng;
 use ledger::{LimitedLedgerConfig, ZondaxRepr};
 use parser::v1::{ARGS_MAP_KEY, ENTRY_POINT_MAP_KEY, SCHEDULING_MAP_KEY, TARGET_MAP_KEY};
 use sample::Sample;
 use test_data::{
-    deploy_delegate_samples, deploy_generic_samples, deploy_native_transfer_samples, deploy_redelegate_samples, deploy_undelegate_samples, native_delegate_samples, native_redelegate_samples, native_undelegate_samples, sign_message::{invalid_casper_message_sample, valid_casper_message_sample}, v1_native_transfer_samples
+    deploy_delegate_samples, deploy_generic_samples, deploy_native_transfer_samples,
+    deploy_redelegate_samples, deploy_undelegate_samples, native_delegate_samples,
+    native_redelegate_samples, native_undelegate_samples,
+    sign_message::{invalid_casper_message_sample, valid_casper_message_sample},
+    v1_native_transfer_samples,
 };
 
 pub mod checksummed_hex;
@@ -32,7 +40,11 @@ fn transaction_deploys() -> impl Iterator<Item = Sample<Transaction>> {
         .chain(deploy_generic_samples(&mut rng))
 }
 
-fn deploy_to_v1_generic(sample: Sample<Transaction>, ep: TransactionEntryPoint, new_suffix: &'static str) -> Result<Sample<Transaction>, ()> {
+fn deploy_to_v1_generic(
+    sample: Sample<Transaction>,
+    ep: TransactionEntryPoint,
+    new_suffix: &'static str,
+) -> Result<Sample<Transaction>, ()> {
     let (mut label, transaction_deploy, is_valid) = sample.destructure();
 
     let deploy = match transaction_deploy {
@@ -68,47 +80,41 @@ fn deploy_to_v1_generic(sample: Sample<Transaction>, ep: TransactionEntryPoint, 
     };
 
     let initiator_addr = InitiatorAddr::AccountHash(deploy.account().clone().to_account_hash());
-    let hash = TransactionV1Hash::new(deploy.hash().inner().clone());
+    let hash = TransactionV1Hash::new(*deploy.hash().inner());
 
     let target = match deploy.session() {
         ExecutableDeployItem::ModuleBytes { module_bytes, .. } => TransactionTarget::Session {
             is_install_upgrade: false,
             module_bytes: module_bytes.clone(),
-            runtime: TransactionRuntimeParams::VmCasperV1
+            runtime: TransactionRuntimeParams::VmCasperV1,
         },
-        ExecutableDeployItem::StoredContractByHash { hash, .. } => {
-            TransactionTarget::Stored {
-                id: TransactionInvocationTarget::ByHash(hash.value()),
-                runtime: TransactionRuntimeParams::VmCasperV1
-            }
+        ExecutableDeployItem::StoredContractByHash { hash, .. } => TransactionTarget::Stored {
+            id: TransactionInvocationTarget::ByHash(hash.value()),
+            runtime: TransactionRuntimeParams::VmCasperV1,
         },
-        ExecutableDeployItem::StoredContractByName { name, .. } => {
-            TransactionTarget::Stored {
-                id: TransactionInvocationTarget::ByName(name.into()),
-                runtime: TransactionRuntimeParams::VmCasperV1
-            }
+        ExecutableDeployItem::StoredContractByName { name, .. } => TransactionTarget::Stored {
+            id: TransactionInvocationTarget::ByName(name.into()),
+            runtime: TransactionRuntimeParams::VmCasperV1,
         },
         ExecutableDeployItem::StoredVersionedContractByHash { hash, version, .. } => {
             TransactionTarget::Stored {
                 id: TransactionInvocationTarget::ByPackageHash {
                     addr: hash.value(),
-                    version: version.clone()
+                    version: *version,
                 },
-                runtime: TransactionRuntimeParams::VmCasperV1
+                runtime: TransactionRuntimeParams::VmCasperV1,
             }
-        },
+        }
         ExecutableDeployItem::StoredVersionedContractByName { name, version, .. } => {
             TransactionTarget::Stored {
                 id: TransactionInvocationTarget::ByPackageName {
                     name: name.into(),
-                    version: version.clone()
+                    version: *version,
                 },
-                runtime: TransactionRuntimeParams::VmCasperV1
+                runtime: TransactionRuntimeParams::VmCasperV1,
             }
-        },
-        ExecutableDeployItem::Transfer { .. } => {
-            TransactionTarget::Native
-        },
+        }
+        ExecutableDeployItem::Transfer { .. } => TransactionTarget::Native,
     };
 
     let scheduling = TransactionScheduling::Standard;
@@ -116,7 +122,7 @@ fn deploy_to_v1_generic(sample: Sample<Transaction>, ep: TransactionEntryPoint, 
         let mut fields: BTreeMap<u16, Bytes> = BTreeMap::new();
         let args = TransactionArgs::Named(deploy.session().args().clone());
         fields.insert(ARGS_MAP_KEY, args.to_bytes().unwrap().into());
-        fields.insert(ENTRY_POINT_MAP_KEY, ep.to_bytes().unwrap().into(),);
+        fields.insert(ENTRY_POINT_MAP_KEY, ep.to_bytes().unwrap().into());
         fields.insert(TARGET_MAP_KEY, target.to_bytes().unwrap().into());
         fields.insert(SCHEDULING_MAP_KEY, scheduling.to_bytes().unwrap().into());
         fields
@@ -142,11 +148,14 @@ fn deploy_to_v1_generic(sample: Sample<Transaction>, ep: TransactionEntryPoint, 
 fn generic_samples_v1(rng: &mut DeterministicTestRng) -> Vec<Sample<Transaction>> {
     deploy_generic_samples(rng)
         .into_iter()
-        .filter_map(|sample| deploy_to_v1_generic(
-            sample,
-            TransactionEntryPoint::Custom("generic-txn-entrypoint".into()),
-            "_generic_sample_v1"
-        ).ok())
+        .filter_map(|sample| {
+            deploy_to_v1_generic(
+                sample,
+                TransactionEntryPoint::Custom("generic-txn-entrypoint".into()),
+                "_generic_sample_v1",
+            )
+            .ok()
+        })
         .collect()
 }
 
@@ -154,7 +163,8 @@ fn transaction_v1s() -> impl Iterator<Item = Sample<Transaction>> {
     // Single rng is created here and used for all generators to minimize diff per old Deploy test vectors.
     let mut rng = DeterministicTestRng::default();
 
-    v1_native_transfer_samples(&mut rng).into_iter()
+    v1_native_transfer_samples(&mut rng)
+        .into_iter()
         .chain(native_delegate_samples(&mut rng))
         .chain(native_undelegate_samples(&mut rng))
         .chain(native_redelegate_samples(&mut rng))

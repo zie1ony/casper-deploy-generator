@@ -1,13 +1,16 @@
 mod deploy;
-mod utils;
 mod runtime_args;
+mod utils;
 pub(crate) mod v1;
 
 use casper_types::{Deploy, TransactionEntryPoint, TransactionV1};
 use v1::{parse_v1_approvals, parse_v1_meta, parse_v1_payload, ENTRY_POINT_MAP_KEY};
 
 use crate::{
-    checksummed_hex, ledger::{Element, TxnPhase}, message::CasperMessage, parser::deploy::{parse_approvals, parse_deploy_header, parse_phase}
+    checksummed_hex,
+    ledger::{Element, TxnPhase},
+    message::CasperMessage,
+    parser::deploy::{parse_approvals, parse_deploy_header, parse_phase},
 };
 
 pub(crate) fn parse_message(m: CasperMessage) -> Vec<Element> {
@@ -32,7 +35,7 @@ pub(crate) fn parse_v1(v1: TransactionV1) -> Vec<Element> {
     let mut elements = vec![];
     elements.push(Element::regular(
         "Txn hash",
-        checksummed_hex::encode(v1.hash().inner()).to_string()
+        checksummed_hex::encode(v1.hash().inner()).to_string(),
     ));
     elements.push(transaction_v1_type(&v1));
     elements.extend(parse_v1_payload(v1.payload()));
@@ -58,7 +61,7 @@ fn deploy_type(d: &Deploy) -> Element {
 
 fn transaction_v1_type(t: &TransactionV1) -> Element {
     let entry_point: TransactionEntryPoint = t.deserialize_field(ENTRY_POINT_MAP_KEY).unwrap();
-    
+
     let v1_type = match entry_point {
         TransactionEntryPoint::Call | TransactionEntryPoint::Custom(_) => "Contract execution",
         TransactionEntryPoint::Transfer => "Transfer",

@@ -208,6 +208,18 @@ fn remove_transfer_args(args: RuntimeArgs) -> RuntimeArgs {
     tree.into()
 }
 
+pub(crate) fn parse_approvals(d: &Deploy) -> Vec<Element> {
+    let approvals_count = d.approvals().len();
+    vec![Element::expert(
+        "Approvals #",
+        format!("{}", approvals_count),
+    )]
+}
+
+fn entrypoint(entry_point: &str) -> Element {
+    Element::expert("entry-point", entry_point.to_string())
+}
+
 #[cfg(test)]
 mod amount {
     use casper_types::U512;
@@ -229,16 +241,4 @@ mod amount {
         let expected = "10 000 000 000 motes".to_string();
         assert_eq!(expected, format_amount(ten_billion));
     }
-}
-
-pub(crate) fn parse_approvals(d: &Deploy) -> Vec<Element> {
-    let approvals_count = d.approvals().len();
-    vec![Element::expert(
-        "Approvals #",
-        format!("{}", approvals_count),
-    )]
-}
-
-fn entrypoint(entry_point: &str) -> Element {
-    Element::expert("entry-point", entry_point.to_string())
 }

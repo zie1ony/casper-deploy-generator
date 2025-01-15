@@ -2,7 +2,10 @@ use casper_types::{system::mint, ExecutableDeployItem, RuntimeArgs};
 
 use crate::{
     ledger::{Element, TxnPhase},
-    parser::{deploy::{deploy_type, parse_amount}, runtime_args::{identity, parse_optional_arg}},
+    parser::{
+        deploy::{deploy_type, parse_amount},
+        runtime_args::{identity, parse_optional_arg},
+    },
 };
 
 fn parse_auction_item<'a, F>(

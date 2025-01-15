@@ -1,8 +1,11 @@
-use casper_types::{account::AccountHash, runtime_args, AccessRights, AsymmetricType, CLValue, ExecutableDeployItem, Key, PublicKey, RuntimeArgs, TransactionArgs, TransactionEntryPoint, TransactionScheduling, TransactionTarget, URef, U512};
+use casper_types::{
+    account::AccountHash, runtime_args, AccessRights, AsymmetricType, CLValue,
+    ExecutableDeployItem, Key, PublicKey, RuntimeArgs, URef, U512,
+};
 
 use crate::sample::Sample;
 
-use super::{commons::UREF_ADDR};
+use super::commons::UREF_ADDR;
 
 /// Represents native transfer sample.
 #[derive(Clone, Debug)]

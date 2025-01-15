@@ -10,10 +10,7 @@ pub(crate) fn parse_runtime_args_v1(ra: &RuntimeArgs) -> Vec<Element> {
     if !ra.is_empty() {
         let args_digest = Digest::hash(ToBytes::to_bytes(ra).expect("ToBytes to work."));
         let args_hash = base16::encode_lower(&args_digest);
-        elements.push(Element::regular(
-            "args hash",
-            args_hash,
-        ));
+        elements.push(Element::regular("args hash", args_hash));
     }
 
     elements
