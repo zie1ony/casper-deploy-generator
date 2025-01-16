@@ -81,6 +81,15 @@ pub(crate) fn parse_add_bid(item: &TransactionV1Meta) -> Vec<Element> {
     parse_auction_v1(item, arg_parser)
 }
 
+pub(crate) fn parse_activate_bid(item: &TransactionV1Meta) -> Vec<Element> {
+    let arg_parser = |args| {
+        let mut elements = vec![];
+        elements.extend(parse_validator_public_key(args));
+        elements
+    };
+    parse_auction_v1(item, arg_parser)
+}
+
 const DELEGATOR_ARG_KEY: &str = "delegator";
 const VALIDATOR_ARG_KEY: &str = "validator";
 const NEW_VALIDATOR_ARG_KEY: &str = "new_validator";
@@ -89,6 +98,7 @@ const DELEGATION_RATE_KEY_ARG_KEY: &str = "delegation_rate";
 const MIN_DELEGATION_AMOUNT_KEY_ARG_KEY: &str = "minimum_delegation_amount";
 const MAX_DELEGATION_AMOUNT_KEY_ARG_KEY: &str = "maximum_delegation_amount";
 const RESERVED_SLOTS_ARG_KEY: &str = "reserved_slots";
+const VALIDATOR_PK_ARG_KEY: &str = "validator_public_key";
 
 fn parse_delegator(args: &RuntimeArgs) -> Option<Element> {
     parse_optional_arg(args, DELEGATOR_ARG_KEY, "delegator", false, identity)
@@ -123,5 +133,9 @@ fn parse_max_delegation_amount(args: &RuntimeArgs) -> Option<Element> {
 }
 
 fn parse_reserved_slots(args: &RuntimeArgs) -> Option<Element> {
-    parse_optional_arg(args, RESERVED_SLOTS_ARG_KEY, "res. slots", false, identity)
+    parse_optional_arg(args, RESERVED_SLOTS_ARG_KEY, "rsrvd slots", false, identity)
+}
+
+fn parse_validator_public_key(args: &RuntimeArgs) -> Option<Element> {
+    parse_optional_arg(args, VALIDATOR_PK_ARG_KEY, "validtr pk", false, identity)
 }

@@ -11,7 +11,7 @@ use crate::{
     utils::{parse_account_hash, parse_public_key},
 };
 
-use auction::{parse_add_bid, parse_delegation, parse_redelegation, parse_undelegation};
+use auction::{parse_activate_bid, parse_add_bid, parse_delegation, parse_redelegation, parse_undelegation};
 use casper_types::{
     bytesrepr::Bytes,
     system::mint::{self, ARG_ID, ARG_SOURCE, ARG_TARGET, ARG_TO},
@@ -21,7 +21,7 @@ use casper_types::{
 };
 use hex::ToHex;
 
-use super::runtime_args::parse_runtime_args_v1;
+use super::runtime_args::{parse_bytesrepr_args, parse_runtime_args_v1};
 
 pub(crate) const ARGS_MAP_KEY: u16 = 0;
 pub(crate) const TARGET_MAP_KEY: u16 = 1;
@@ -126,32 +126,50 @@ pub(crate) fn parse_v1_meta(v1: &TransactionV1) -> Vec<Element> {
             TransactionEntryPoint::Undelegate => parse_undelegation(&meta),
             TransactionEntryPoint::Redelegate => parse_redelegation(&meta),
             TransactionEntryPoint::AddBid => parse_add_bid(&meta),
+            TransactionEntryPoint::ActivateBid => parse_activate_bid(&meta),
             _ => panic!(
                 "Generator doesn't support the native entrypoint '{}'",
                 meta.entry_point
             ),
         },
         TransactionTarget::Stored { .. } => {
-            let args = meta.args.as_named().unwrap();
             let mut elements: Vec<Element> = v1_type(&meta);
-            let entry_point_str = meta.entry_point.custom_entry_point().unwrap();
+            let entry_point_str = match meta.entry_point {
+                TransactionEntryPoint::Call | TransactionEntryPoint::Custom(_) => {
+                    meta.entry_point.custom_entry_point().unwrap()
+                }
+                _ => meta.entry_point.to_string()
+            };
             elements.push(entrypoint(&entry_point_str));
-            elements.extend(parse_amount(args));
-            elements.extend(parse_runtime_args_v1(args));
+            match meta.args {
+                TransactionArgs::Named(args) => {
+                    elements.extend(parse_amount(&args));
+                    elements.extend(parse_runtime_args_v1(&args));
+                },
+                TransactionArgs::Bytesrepr(bytes) => {
+                    elements.extend(parse_bytesrepr_args(bytes));
+                },
+            }
             elements
         }
         TransactionTarget::Session { module_bytes, .. } => {
-            let args = meta.args.as_named().unwrap();
             let mut elements: Vec<Element> = v1_type(&meta);
-            if is_system_payment(module_bytes) {
-                elements.extend(parse_fee(args));
-                let args_sans_amount = remove_amount_arg(args.clone());
-                if !args_sans_amount.is_empty() {
-                    elements.extend(parse_runtime_args_v1(args));
-                }
-            } else {
-                elements.extend(parse_amount(args));
-                elements.extend(parse_runtime_args_v1(args));
+            match meta.args {
+                TransactionArgs::Named(args) => {
+                    if is_system_payment(module_bytes) {
+                        elements.extend(parse_fee(&args));
+                        let args_sans_amount = remove_amount_arg(args.clone());
+                        if !args_sans_amount.is_empty() {
+                            elements.extend(parse_runtime_args_v1(&args));
+                        }
+                    } else {
+                        elements.extend(parse_amount(&args));
+                        elements.extend(parse_runtime_args_v1(&args));
+                    }
+                },
+                TransactionArgs::Bytesrepr(bytes) => {
+                    elements.extend(parse_bytesrepr_args(bytes));
+                },
             }
             elements
         }

@@ -1,6 +1,6 @@
 use crate::ledger::{Element, TxnPhase};
 use crate::utils::cl_value_to_string;
-use casper_types::bytesrepr::ToBytes;
+use casper_types::bytesrepr::{Bytes, ToBytes};
 use casper_types::system::mint::{self, ARG_ID, ARG_SOURCE, ARG_TARGET, ARG_TO};
 use casper_types::{Digest, RuntimeArgs, U512};
 use thousands::Separable;
@@ -12,7 +12,16 @@ pub(crate) fn parse_runtime_args_v1(ra: &RuntimeArgs) -> Vec<Element> {
         let args_hash = base16::encode_lower(&args_digest);
         elements.push(Element::regular("args hash", args_hash));
     }
+    elements
+}
 
+pub(crate) fn parse_bytesrepr_args(bytes: Bytes) -> Vec<Element> {
+    let mut elements: Vec<Element> = vec![];
+    if !bytes.is_empty() {
+        let args_digest = Digest::hash(bytes);
+        let args_hash = base16::encode_lower(&args_digest);
+        elements.push(Element::regular("args hash", args_hash));
+    }
     elements
 }
 
