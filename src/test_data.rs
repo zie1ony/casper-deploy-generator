@@ -375,3 +375,14 @@ pub(crate) fn native_redelegate_samples<R: Rng>(rng: &mut R) -> Vec<Sample<Trans
     ));
     native_redelegate_samples
 }
+
+pub(crate) fn native_add_bid_samples<R: Rng>(rng: &mut R) -> Vec<Sample<Transaction>> {
+    let mut native_add_bid_samples =
+        construct_transaction_samples(rng, native_v1::add_bid::valid());
+
+        native_add_bid_samples.extend(construct_transaction_samples(
+        rng,
+        native_v1::add_bid::invalid(),
+    ));
+    native_add_bid_samples
+}

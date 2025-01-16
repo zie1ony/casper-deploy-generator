@@ -67,9 +67,28 @@ pub(crate) fn parse_redelegation(item: &TransactionV1Meta) -> Vec<Element> {
     parse_auction_v1(item, arg_parser)
 }
 
+pub(crate) fn parse_add_bid(item: &TransactionV1Meta) -> Vec<Element> {
+    let arg_parser = |args| {
+        let mut elements = vec![];
+        elements.extend(parse_public_key(args));
+        elements.extend(parse_delegation_rate(args));
+        elements.extend(parse_amount(args));
+        elements.extend(parse_min_delegation_amount(args));
+        elements.extend(parse_max_delegation_amount(args));
+        elements.extend(parse_reserved_slots(args));
+        elements
+    };
+    parse_auction_v1(item, arg_parser)
+}
+
 const DELEGATOR_ARG_KEY: &str = "delegator";
 const VALIDATOR_ARG_KEY: &str = "validator";
 const NEW_VALIDATOR_ARG_KEY: &str = "new_validator";
+const PUBLIC_KEY_ARG_KEY: &str = "public_key";
+const DELEGATION_RATE_KEY_ARG_KEY: &str = "delegation_rate";
+const MIN_DELEGATION_AMOUNT_KEY_ARG_KEY: &str = "minimum_delegation_amount";
+const MAX_DELEGATION_AMOUNT_KEY_ARG_KEY: &str = "maximum_delegation_amount";
+const RESERVED_SLOTS_ARG_KEY: &str = "reserved_slots";
 
 fn parse_delegator(args: &RuntimeArgs) -> Option<Element> {
     parse_optional_arg(args, DELEGATOR_ARG_KEY, "delegator", false, identity)
@@ -85,4 +104,24 @@ fn parse_old_validator(args: &RuntimeArgs) -> Option<Element> {
 
 fn parse_new_validator(args: &RuntimeArgs) -> Option<Element> {
     parse_optional_arg(args, NEW_VALIDATOR_ARG_KEY, "new", false, identity)
+}
+
+fn parse_public_key(args: &RuntimeArgs) -> Option<Element> {
+    parse_optional_arg(args, PUBLIC_KEY_ARG_KEY, "public key", false, identity)
+}
+
+fn parse_delegation_rate(args: &RuntimeArgs) -> Option<Element> {
+    parse_optional_arg(args, DELEGATION_RATE_KEY_ARG_KEY, "deleg. rate", false, identity)
+}
+
+fn parse_min_delegation_amount(args: &RuntimeArgs) -> Option<Element> {
+    parse_optional_arg(args, MIN_DELEGATION_AMOUNT_KEY_ARG_KEY, "min. amount", false, identity)
+}
+
+fn parse_max_delegation_amount(args: &RuntimeArgs) -> Option<Element> {
+    parse_optional_arg(args, MAX_DELEGATION_AMOUNT_KEY_ARG_KEY, "max. amount", false, identity)
+}
+
+fn parse_reserved_slots(args: &RuntimeArgs) -> Option<Element> {
+    parse_optional_arg(args, RESERVED_SLOTS_ARG_KEY, "res. slots", false, identity)
 }

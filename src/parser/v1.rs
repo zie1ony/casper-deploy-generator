@@ -11,7 +11,7 @@ use crate::{
     utils::{parse_account_hash, parse_public_key},
 };
 
-use auction::{parse_delegation, parse_redelegation, parse_undelegation};
+use auction::{parse_add_bid, parse_delegation, parse_redelegation, parse_undelegation};
 use casper_types::{
     bytesrepr::Bytes,
     system::mint::{self, ARG_ID, ARG_SOURCE, ARG_TARGET, ARG_TO},
@@ -19,6 +19,7 @@ use casper_types::{
     TransactionEntryPoint, TransactionInvocationTarget, TransactionScheduling, TransactionTarget,
     TransactionV1, TransactionV1Payload,
 };
+use hex::ToHex;
 
 use super::runtime_args::parse_runtime_args_v1;
 
@@ -75,18 +76,33 @@ pub(crate) fn parse_v1_payload(payload: &TransactionV1Payload) -> Vec<Element> {
         InitiatorAddr::PublicKey(public_key) => parse_public_key(public_key),
         InitiatorAddr::AccountHash(account_hash) => parse_account_hash(account_hash),
     };
-    let gas_price = match payload.pricing_mode() {
-        PricingMode::PaymentLimited { payment_amount, .. } => payment_amount.to_string(),
-        PricingMode::Fixed { .. } => "Fixed".into(),
-        PricingMode::Prepaid { .. } => "0".into(),
-    };
     elements.push(Element::regular("account", initiator));
     elements.push(Element::expert(
         "timestamp",
         timestamp_to_seconds_res(payload.timestamp()),
     ));
     elements.push(Element::expert("ttl", format!("{}", payload.ttl())));
-    elements.push(Element::expert("payment", gas_price.to_string()));
+
+    match payload.pricing_mode() {
+        PricingMode::PaymentLimited { payment_amount, gas_price_tolerance, .. } => {
+            let payment_type_label = Element::expert("payment", payment_amount.to_string());
+            let max_gas_label = Element::expert("max gas", gas_price_tolerance.to_string());
+            elements.push(payment_type_label);
+            elements.push(max_gas_label);
+        },
+        PricingMode::Fixed { gas_price_tolerance, .. } => {
+            let payment_type_label = Element::expert("payment", "fixed".into());
+            let max_gas_label = Element::expert("max gas", gas_price_tolerance.to_string());
+            elements.push(payment_type_label);
+            elements.push(max_gas_label);
+        },
+        PricingMode::Prepaid { receipt } => {
+            let payment_type_label = Element::expert("payment", "prepaid".into());
+            let receipt_label = Element::expert("receipt", receipt.encode_hex::<String>());
+            elements.push(payment_type_label);
+            elements.push(receipt_label);
+        },
+    }
 
     elements
 }
@@ -109,6 +125,7 @@ pub(crate) fn parse_v1_meta(v1: &TransactionV1) -> Vec<Element> {
             TransactionEntryPoint::Delegate => parse_delegation(&meta),
             TransactionEntryPoint::Undelegate => parse_undelegation(&meta),
             TransactionEntryPoint::Redelegate => parse_redelegation(&meta),
+            TransactionEntryPoint::AddBid => parse_add_bid(&meta),
             _ => panic!(
                 "Generator doesn't support the native entrypoint '{}'",
                 meta.entry_point
