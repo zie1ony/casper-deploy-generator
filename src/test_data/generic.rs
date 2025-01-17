@@ -426,21 +426,11 @@ fn sample_keys() -> Vec<Key> {
         TopicNameHash::new([1u8; 32]),
         1,
     ));
-    // let state = Key::State(EntityAddr)
-
-    //let bid_addr = Key::BidAddr(BidAddr::new_credit(validator, era_id)))
+    
     let system_registry_key = Key::SystemEntityRegistry;
     let chainspec_registry_key = Key::ChainspecRegistry;
     let checksum_registry_key = Key::ChecksumRegistry;
     let era_summary = Key::EraSummary;
-
-    /*  TODO: The following aren't covered. Investigate.
-        Key::NamedKey(named_key_addr)
-        Key::BlockGlobal(block_global_addr)
-        Key::BalanceHold(balance_hold_addr)
-        Key::EntryPoint(entry_point_addr)
-        Key::State(entity_addr)
-    */
 
     vec![
         account_key,
