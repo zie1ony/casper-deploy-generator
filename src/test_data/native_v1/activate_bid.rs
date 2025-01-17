@@ -50,20 +50,17 @@ fn native_activate_bid_samples(
 pub(crate) fn valid() -> Vec<Sample<TransactionV1Meta>> {
     let public_keys = vec![
         PublicKey::ed25519_from_bytes([0u8; 32]).unwrap(),
-        PublicKey::ed25519_from_bytes([1u8; 32]).unwrap(),
+        PublicKey::secp256k1_from_bytes(
+            hex::decode(b"026e1b7a8e3243f5ff14e825b0fde15103588bb61e6ae99084968b017118e0504f")
+                .unwrap(),
+        )
+        .unwrap(),
         PublicKey::ed25519_from_bytes([3u8; 32]).unwrap(),
-    ];
-
-    let schedulings = [
-        (TransactionScheduling::Standard, "standard_scheduling"),
-        (TransactionScheduling::FutureEra(EraId::new(6000)), "future_era"),
-        (TransactionScheduling::FutureTimestamp(Timestamp::from(6000)), "future_timestamp"),
     ];
 
     super::make_samples_with_schedulings(
         native_activate_bid_samples(&public_keys),
         TransactionEntryPoint::ActivateBid,
-        &schedulings
     )
 }
 

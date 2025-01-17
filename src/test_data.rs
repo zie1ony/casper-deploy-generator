@@ -377,6 +377,30 @@ pub(crate) fn native_activate_bid_samples<R: Rng>(rng: &mut R) -> Vec<Sample<Tra
     )
 }
 
+pub(crate) fn native_change_bid_pk_samples<R: Rng>(rng: &mut R) -> Vec<Sample<Transaction>> {
+    native_samples(
+        rng,
+        native_v1::change_bid_pk::valid,
+        native_v1::change_bid_pk::invalid
+    )
+}
+
+pub(crate) fn native_add_reservations_samples<R: Rng>(rng: &mut R) -> Vec<Sample<Transaction>> {
+    native_samples(
+        rng,
+        native_v1::add_reservations::valid,
+        native_v1::add_reservations::invalid
+    )
+}
+
+pub(crate) fn native_cancel_reservations_samples<R: Rng>(rng: &mut R) -> Vec<Sample<Transaction>> {
+    native_samples(
+        rng,
+        native_v1::cancel_reservations::valid,
+        native_v1::cancel_reservations::invalid
+    )
+}
+
 pub(crate) fn native_samples<R: Rng>(
     rng: &mut R,
     valid_generator: fn() -> Vec<Sample<TransactionV1Meta>>,

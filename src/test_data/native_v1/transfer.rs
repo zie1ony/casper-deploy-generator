@@ -45,19 +45,10 @@ pub(crate) fn valid() -> Vec<Sample<TransactionV1Meta>> {
         .chain(vec![TransferSource::none()])
         .collect();
 
-    native_transfer_samples(&amounts, &transfer_id, &targets, &sources)
-        .into_iter()
-        .map(|s| {
-            let (label, sample, validity) = s.destructure();
-            let transaction = TransactionV1Meta::new(
-                TransactionArgs::Named(sample.into()),
-                TransactionTarget::Native,
-                TransactionEntryPoint::Transfer,
-                TransactionScheduling::Standard,
-            );
-            Sample::new(format!("v1_{label}"), transaction, validity)
-        })
-        .collect()
+    super::make_samples_with_schedulings(
+        native_transfer_samples(&amounts, &transfer_id, &targets, &sources),
+        TransactionEntryPoint::Transfer,
+    )
 }
 
 /// Returns invalid native transfer samples.
