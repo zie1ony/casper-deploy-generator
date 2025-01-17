@@ -1,5 +1,6 @@
 use casper_types::{
-    runtime_args, AsymmetricType, EraId, PublicKey, RuntimeArgs, Timestamp, TransactionArgs, TransactionEntryPoint, TransactionScheduling, TransactionTarget, U512
+    runtime_args, AsymmetricType, PublicKey, RuntimeArgs, TransactionArgs, TransactionEntryPoint,
+    TransactionScheduling, TransactionTarget,
 };
 
 use crate::sample::Sample;
@@ -9,15 +10,13 @@ use crate::test_data::TransactionV1Meta;
 /// Represents native delegation sample.
 #[derive(Clone, Debug)]
 struct ActivateBid {
-    validator_public_key: PublicKey
+    validator_public_key: PublicKey,
 }
 
 impl ActivateBid {
-    pub fn new(
-        validator_public_key: PublicKey
-    ) -> Self {
+    pub fn new(validator_public_key: PublicKey) -> Self {
         Self {
-            validator_public_key
+            validator_public_key,
         }
     }
 }
@@ -25,19 +24,18 @@ impl ActivateBid {
 impl From<ActivateBid> for RuntimeArgs {
     fn from(d: ActivateBid) -> Self {
         let mut args = RuntimeArgs::new();
-        args.insert("validator_public_key", d.validator_public_key).unwrap();
+        args.insert("validator_public_key", d.validator_public_key)
+            .unwrap();
         args
     }
 }
 
 // Generate a native delegate sample for every possible combination of parameters
-fn native_activate_bid_samples(
-    validator_public_keys: &[PublicKey]
-) -> Vec<Sample<ActivateBid>> {
+fn native_activate_bid_samples(validator_public_keys: &[PublicKey]) -> Vec<Sample<ActivateBid>> {
     let mut samples: Vec<Sample<ActivateBid>> = vec![];
 
     for validator_pk in validator_public_keys {
-        let label = format!("native_activate_bid_v1");
+        let label = "native_activate_bid_v1".to_string();
         let bid = ActivateBid::new(validator_pk.clone());
         let sample = Sample::new(label, bid, true);
         samples.push(sample);
@@ -68,9 +66,7 @@ pub(crate) fn valid() -> Vec<Sample<TransactionV1Meta>> {
 pub(crate) fn invalid() -> Vec<Sample<TransactionV1Meta>> {
     let missing_pk = runtime_args! {};
 
-    let invalid_args = vec![
-        Sample::new("missing_public_key", missing_pk, false),
-    ];
+    let invalid_args = vec![Sample::new("missing_public_key", missing_pk, false)];
 
     invalid_args
         .into_iter()

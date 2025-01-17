@@ -1,6 +1,7 @@
-use casper_types::system::auction::{DelegationRate, DelegatorKind, Reservation};
+use casper_types::system::auction::DelegatorKind;
 use casper_types::{
-    runtime_args, AsymmetricType, PublicKey, RuntimeArgs, TransactionArgs, TransactionEntryPoint, TransactionScheduling, TransactionTarget,
+    runtime_args, AsymmetricType, PublicKey, RuntimeArgs, TransactionArgs, TransactionEntryPoint,
+    TransactionScheduling, TransactionTarget,
 };
 
 use crate::sample::Sample;
@@ -15,13 +16,10 @@ struct CancelReservations {
 }
 
 impl CancelReservations {
-    pub fn new(
-        validator: PublicKey,
-        delegators: Vec<DelegatorKind>,
-    ) -> Self {
+    pub fn new(validator: PublicKey, delegators: Vec<DelegatorKind>) -> Self {
         Self {
             validator,
-            delegators
+            delegators,
         }
     }
 }
@@ -44,9 +42,9 @@ fn native_cancel_reservations_samples(
     for validator in validators {
         for delegators in delegators_mul {
             samples.push(Sample::new(
-                format!("native_cancel_reservations"),
+                "native_cancel_reservations".to_string(),
                 CancelReservations::new(validator.clone(), delegators.clone()),
-                true
+                true,
             ));
         }
     }
@@ -58,27 +56,23 @@ fn native_cancel_reservations_samples(
 pub(crate) fn valid() -> Vec<Sample<TransactionV1Meta>> {
     let delegator_kinds_1 = vec![
         DelegatorKind::PublicKey(PublicKey::ed25519_from_bytes([6u8; 32]).unwrap()),
-        DelegatorKind::PublicKey(PublicKey::secp256k1_from_bytes(
-            hex::decode(b"026e1b7a8e3243f5ff14e825b0fde15103588bb61e6ae99084968b017118e0504f")
-                .unwrap(),
-        )
-        .unwrap()),
+        DelegatorKind::PublicKey(
+            PublicKey::secp256k1_from_bytes(
+                hex::decode(b"026e1b7a8e3243f5ff14e825b0fde15103588bb61e6ae99084968b017118e0504f")
+                    .unwrap(),
+            )
+            .unwrap(),
+        ),
         DelegatorKind::Purse([9u8; 32]),
     ];
 
-    let delegator_kinds_2 = vec![
-        DelegatorKind::PublicKey(PublicKey::ed25519_from_bytes([6u8; 32]).unwrap()),
-    ];
+    let delegator_kinds_2 = vec![DelegatorKind::PublicKey(
+        PublicKey::ed25519_from_bytes([6u8; 32]).unwrap(),
+    )];
 
-    let delegator_kinds_3 = vec![
-        DelegatorKind::Purse([9u8; 32]),
-    ];
+    let delegator_kinds_3 = vec![DelegatorKind::Purse([9u8; 32])];
 
-    let delegator_kinds_mul = vec![
-        delegator_kinds_1,
-        delegator_kinds_2,
-        delegator_kinds_3
-    ];
+    let delegator_kinds_mul = vec![delegator_kinds_1, delegator_kinds_2, delegator_kinds_3];
 
     let validator_pks = vec![
         PublicKey::secp256k1_from_bytes(
@@ -91,10 +85,7 @@ pub(crate) fn valid() -> Vec<Sample<TransactionV1Meta>> {
     ];
 
     super::make_samples_with_schedulings(
-        native_cancel_reservations_samples(
-            &validator_pks,
-            &delegator_kinds_mul
-        ),
+        native_cancel_reservations_samples(&validator_pks, &delegator_kinds_mul),
         TransactionEntryPoint::CancelReservations,
     )
 }
@@ -102,7 +93,7 @@ pub(crate) fn valid() -> Vec<Sample<TransactionV1Meta>> {
 /// Returns invalid native transfer samples.
 pub(crate) fn invalid() -> Vec<Sample<TransactionV1Meta>> {
     let validator = PublicKey::ed25519_from_bytes([6u8; 32]).unwrap();
-    let delegators = vec![DelegatorKind::Purse([9u8; 32]),];
+    let delegators = vec![DelegatorKind::Purse([9u8; 32])];
 
     let missing_validator_pk = runtime_args! {
         "delegators" => delegators,

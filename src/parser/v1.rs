@@ -11,13 +11,16 @@ use crate::{
     utils::{parse_account_hash, parse_public_key},
 };
 
-use auction::{parse_activate_bid, parse_add_bid, parse_add_reservations, parse_cancel_reservations, parse_change_bid_pk, parse_delegation, parse_redelegation, parse_undelegation};
+use auction::{
+    parse_activate_bid, parse_add_bid, parse_add_reservations, parse_cancel_reservations,
+    parse_change_bid_pk, parse_delegation, parse_redelegation, parse_undelegation,
+};
 use casper_types::{
     bytesrepr::Bytes,
     system::mint::{self, ARG_ID, ARG_SOURCE, ARG_TARGET, ARG_TO},
     CLValue, Digest, InitiatorAddr, PricingMode, RuntimeArgs, TransactionArgs,
     TransactionEntryPoint, TransactionInvocationTarget, TransactionScheduling, TransactionTarget,
-    TransactionV1, TransactionV1Payload, U512,
+    TransactionV1, TransactionV1Payload,
 };
 use hex::ToHex;
 use thousands::Separable;
@@ -85,24 +88,32 @@ pub(crate) fn parse_v1_payload(payload: &TransactionV1Payload) -> Vec<Element> {
     elements.push(Element::expert("ttl", format!("{}", payload.ttl())));
 
     match payload.pricing_mode() {
-        PricingMode::PaymentLimited { payment_amount, gas_price_tolerance, .. } => {
-            let payment_type_label = Element::expert("payment", payment_amount.separate_with_spaces());
+        PricingMode::PaymentLimited {
+            payment_amount,
+            gas_price_tolerance,
+            ..
+        } => {
+            let payment_type_label =
+                Element::expert("payment", payment_amount.separate_with_spaces());
             let max_gas_label = Element::expert("max gs prce", gas_price_tolerance.to_string());
             elements.push(payment_type_label);
             elements.push(max_gas_label);
-        },
-        PricingMode::Fixed { gas_price_tolerance, .. } => {
+        }
+        PricingMode::Fixed {
+            gas_price_tolerance,
+            ..
+        } => {
             let payment_type_label = Element::expert("payment", "Fixed".into());
             let max_gas_label = Element::expert("max gs prce", gas_price_tolerance.to_string());
             elements.push(payment_type_label);
             elements.push(max_gas_label);
-        },
+        }
         PricingMode::Prepaid { receipt } => {
             let payment_type_label = Element::expert("payment", "Prepaid".into());
             let receipt_label = Element::expert("receipt", receipt.encode_hex::<String>());
             elements.push(payment_type_label);
             elements.push(receipt_label);
-        },
+        }
     }
 
     elements
@@ -142,17 +153,17 @@ pub(crate) fn parse_v1_meta(v1: &TransactionV1) -> Vec<Element> {
                 TransactionEntryPoint::Call | TransactionEntryPoint::Custom(_) => {
                     meta.entry_point.custom_entry_point().unwrap()
                 }
-                _ => meta.entry_point.to_string()
+                _ => meta.entry_point.to_string(),
             };
             elements.push(entrypoint(&entry_point_str));
             match meta.args {
                 TransactionArgs::Named(args) => {
                     elements.extend(parse_amount(&args));
                     elements.extend(parse_runtime_args_v1(&args));
-                },
+                }
                 TransactionArgs::Bytesrepr(bytes) => {
                     elements.extend(parse_bytesrepr_args(bytes));
-                },
+                }
             }
             elements
         }
@@ -170,10 +181,10 @@ pub(crate) fn parse_v1_meta(v1: &TransactionV1) -> Vec<Element> {
                         elements.extend(parse_amount(&args));
                         elements.extend(parse_runtime_args_v1(&args));
                     }
-                },
+                }
                 TransactionArgs::Bytesrepr(bytes) => {
                     elements.extend(parse_bytesrepr_args(bytes));
-                },
+                }
             }
             elements
         }

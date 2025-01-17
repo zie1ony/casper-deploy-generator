@@ -1,6 +1,7 @@
 use casper_types::system::auction::{DelegationRate, DelegatorKind, Reservation};
 use casper_types::{
-    runtime_args, AsymmetricType, PublicKey, RuntimeArgs, TransactionArgs, TransactionEntryPoint, TransactionScheduling, TransactionTarget,
+    runtime_args, AsymmetricType, PublicKey, RuntimeArgs, TransactionArgs, TransactionEntryPoint,
+    TransactionScheduling, TransactionTarget,
 };
 
 use crate::sample::Sample;
@@ -14,12 +15,8 @@ struct AddReservations {
 }
 
 impl AddReservations {
-    pub fn new(
-        reservations: Vec<Reservation>,
-    ) -> Self {
-        Self {
-            reservations,
-        }
+    pub fn new(reservations: Vec<Reservation>) -> Self {
+        Self { reservations }
     }
 }
 
@@ -38,7 +35,7 @@ fn native_add_reservations_samples(
     delegation_rates: &[DelegationRate],
 ) -> Vec<Sample<AddReservations>> {
     let mut samples: Vec<Sample<AddReservations>> = vec![];
-    
+
     let mut reservations = vec![];
     for delegator_kind in delegator_kinds {
         for validator_pk in validator_public_keys {
@@ -46,18 +43,18 @@ fn native_add_reservations_samples(
                 reservations.push(Reservation::new(
                     validator_pk.clone(),
                     delegator_kind.clone(),
-                    delegation_rate.clone()
+                    *delegation_rate,
                 ));
             }
         }
     }
 
     for length in 0..4 {
-        let sub_reservations = reservations.iter().take(length).map(|x| x.clone()).collect();
+        let sub_reservations = reservations.iter().take(length).cloned().collect();
         samples.push(Sample::new(
             format!("native_add_reservations_{length}_elements"),
             AddReservations::new(sub_reservations),
-            true
+            true,
         ));
     }
 
@@ -68,11 +65,13 @@ fn native_add_reservations_samples(
 pub(crate) fn valid() -> Vec<Sample<TransactionV1Meta>> {
     let delegator_kinds = vec![
         DelegatorKind::PublicKey(PublicKey::ed25519_from_bytes([6u8; 32]).unwrap()),
-        DelegatorKind::PublicKey(PublicKey::secp256k1_from_bytes(
-            hex::decode(b"026e1b7a8e3243f5ff14e825b0fde15103588bb61e6ae99084968b017118e0504f")
-                .unwrap(),
-        )
-        .unwrap()),
+        DelegatorKind::PublicKey(
+            PublicKey::secp256k1_from_bytes(
+                hex::decode(b"026e1b7a8e3243f5ff14e825b0fde15103588bb61e6ae99084968b017118e0504f")
+                    .unwrap(),
+            )
+            .unwrap(),
+        ),
         DelegatorKind::Purse([9u8; 32]),
     ];
 
@@ -89,11 +88,7 @@ pub(crate) fn valid() -> Vec<Sample<TransactionV1Meta>> {
     let delegation_rates = vec![1, 2, 4];
 
     super::make_samples_with_schedulings(
-        native_add_reservations_samples(
-            &delegator_kinds,
-            &validator_pks,
-            &delegation_rates
-        ),
+        native_add_reservations_samples(&delegator_kinds, &validator_pks, &delegation_rates),
         TransactionEntryPoint::AddReservations,
     )
 }
@@ -102,9 +97,11 @@ pub(crate) fn valid() -> Vec<Sample<TransactionV1Meta>> {
 pub(crate) fn invalid() -> Vec<Sample<TransactionV1Meta>> {
     let missing_reservations = runtime_args! {};
 
-    let invalid_args = vec![
-        Sample::new("missing_reservations", missing_reservations, false),
-    ];
+    let invalid_args = vec![Sample::new(
+        "missing_reservations",
+        missing_reservations,
+        false,
+    )];
 
     invalid_args
         .into_iter()

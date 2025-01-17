@@ -1,5 +1,6 @@
 use casper_types::{
-    runtime_args, AsymmetricType, EraId, PublicKey, RuntimeArgs, Timestamp, TransactionArgs, TransactionEntryPoint, TransactionScheduling, TransactionTarget, U512
+    runtime_args, AsymmetricType, PublicKey, RuntimeArgs, TransactionArgs, TransactionEntryPoint,
+    TransactionScheduling, TransactionTarget,
 };
 
 use crate::sample::Sample;
@@ -14,10 +15,7 @@ struct ChangeBidPk {
 }
 
 impl ChangeBidPk {
-    pub fn new(
-        public_key: PublicKey,
-        new_public_key: PublicKey,
-    ) -> Self {
+    pub fn new(public_key: PublicKey, new_public_key: PublicKey) -> Self {
         Self {
             public_key,
             new_public_key,
@@ -42,7 +40,7 @@ fn native_change_bid_pk_samples(
 
     for old_pk in public_keys {
         for new_pk in new_public_keys {
-            let label = format!("native_change_bid_public_key_v1");
+            let label = "native_change_bid_public_key_v1".to_string();
             let bid = ChangeBidPk::new(old_pk.clone(), new_pk.clone());
             let sample = Sample::new(label, bid, true);
             samples.push(sample);

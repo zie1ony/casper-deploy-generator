@@ -4,7 +4,11 @@ use std::{
 };
 
 use casper_types::{
-    bytesrepr::{Bytes, ToBytes}, Deploy, DeployHash, DeployHeader, Digest, ExecutableDeployItem, InitiatorAddr, PricingMode, PublicKey, SecretKey, TimeDiff, Timestamp, Transaction, TransactionArgs, TransactionInvocationTarget, TransactionRuntimeParams, TransactionTarget, TransactionV1, TransactionV1Payload
+    bytesrepr::{Bytes, ToBytes},
+    Deploy, DeployHash, DeployHeader, Digest, ExecutableDeployItem, InitiatorAddr, PricingMode,
+    PublicKey, SecretKey, TimeDiff, Timestamp, Transaction, TransactionArgs,
+    TransactionInvocationTarget, TransactionRuntimeParams, TransactionTarget, TransactionV1,
+    TransactionV1Payload,
 };
 use rand::{prelude::*, Rng};
 
@@ -333,7 +337,7 @@ pub(crate) fn v1_native_transfer_samples<R: Rng>(rng: &mut R) -> Vec<Sample<Tran
     native_samples(
         rng,
         native_v1::transfer::valid,
-        native_v1::transfer::invalid
+        native_v1::transfer::invalid,
     )
 }
 
@@ -341,7 +345,7 @@ pub(crate) fn native_delegate_samples<R: Rng>(rng: &mut R) -> Vec<Sample<Transac
     native_samples(
         rng,
         native_v1::delegate::valid,
-        native_v1::delegate::invalid
+        native_v1::delegate::invalid,
     )
 }
 
@@ -349,7 +353,7 @@ pub(crate) fn native_undelegate_samples<R: Rng>(rng: &mut R) -> Vec<Sample<Trans
     native_samples(
         rng,
         native_v1::undelegate::valid,
-        native_v1::undelegate::invalid
+        native_v1::undelegate::invalid,
     )
 }
 
@@ -357,23 +361,19 @@ pub(crate) fn native_redelegate_samples<R: Rng>(rng: &mut R) -> Vec<Sample<Trans
     native_samples(
         rng,
         native_v1::redelegate::valid,
-        native_v1::redelegate::invalid
+        native_v1::redelegate::invalid,
     )
 }
 
 pub(crate) fn native_add_bid_samples<R: Rng>(rng: &mut R) -> Vec<Sample<Transaction>> {
-    native_samples(
-        rng,
-        native_v1::add_bid::valid,
-        native_v1::add_bid::invalid
-    )
+    native_samples(rng, native_v1::add_bid::valid, native_v1::add_bid::invalid)
 }
 
 pub(crate) fn native_activate_bid_samples<R: Rng>(rng: &mut R) -> Vec<Sample<Transaction>> {
     native_samples(
         rng,
         native_v1::activate_bid::valid,
-        native_v1::activate_bid::invalid
+        native_v1::activate_bid::invalid,
     )
 }
 
@@ -381,7 +381,7 @@ pub(crate) fn native_change_bid_pk_samples<R: Rng>(rng: &mut R) -> Vec<Sample<Tr
     native_samples(
         rng,
         native_v1::change_bid_pk::valid,
-        native_v1::change_bid_pk::invalid
+        native_v1::change_bid_pk::invalid,
     )
 }
 
@@ -389,7 +389,7 @@ pub(crate) fn native_add_reservations_samples<R: Rng>(rng: &mut R) -> Vec<Sample
     native_samples(
         rng,
         native_v1::add_reservations::valid,
-        native_v1::add_reservations::invalid
+        native_v1::add_reservations::invalid,
     )
 }
 
@@ -397,41 +397,38 @@ pub(crate) fn native_cancel_reservations_samples<R: Rng>(rng: &mut R) -> Vec<Sam
     native_samples(
         rng,
         native_v1::cancel_reservations::valid,
-        native_v1::cancel_reservations::invalid
+        native_v1::cancel_reservations::invalid,
     )
 }
 
 pub(crate) fn native_samples<R: Rng>(
     rng: &mut R,
     valid_generator: fn() -> Vec<Sample<TransactionV1Meta>>,
-    invalid_generator: fn() -> Vec<Sample<TransactionV1Meta>>
+    invalid_generator: fn() -> Vec<Sample<TransactionV1Meta>>,
 ) -> Vec<Sample<Transaction>> {
     // populate with valid native samples
-    let mut samples = construct_transaction_samples(
-        rng,
-        valid_generator()
-    );
+    let mut samples = construct_transaction_samples(rng, valid_generator());
 
     // extend with invalid samples (from generator)
-    samples.extend(construct_transaction_samples(
-        rng,
-        invalid_generator()
-    ));
+    samples.extend(construct_transaction_samples(rng, invalid_generator()));
 
     // extend with invalid samples (force target/entrypoint mismatch)
     samples.extend(construct_transaction_samples(
         rng,
-        valid_generator().into_iter().map(|sample| {
-            let (label, mut meta, _) = sample.destructure();
-            
-            meta.target = TransactionTarget::Stored {
-                id: TransactionInvocationTarget::ByName("auction".into()),
-                runtime: TransactionRuntimeParams::VmCasperV1
-            };
+        valid_generator()
+            .into_iter()
+            .map(|sample| {
+                let (label, mut meta, _) = sample.destructure();
 
-            let new_label = format!("{label}_native_ep_with_stored_contract");
-            Sample::new(new_label, meta, false)
-        }).collect()
+                meta.target = TransactionTarget::Stored {
+                    id: TransactionInvocationTarget::ByName("auction".into()),
+                    runtime: TransactionRuntimeParams::VmCasperV1,
+                };
+
+                let new_label = format!("{label}_native_ep_with_stored_contract");
+                Sample::new(new_label, meta, false)
+            })
+            .collect(),
     ));
 
     samples

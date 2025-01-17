@@ -44,8 +44,10 @@ impl From<AddBid> for RuntimeArgs {
         args.insert("public_key", d.public_key).unwrap();
         args.insert("delegation_rate", d.delegation_rate).unwrap();
         args.insert("amount", d.amount).unwrap();
-        args.insert("minimum_delegation_amount", d.minimum_delegation_amount).unwrap();
-        args.insert("maximum_delegation_amount", d.maximum_delegation_amount).unwrap();
+        args.insert("minimum_delegation_amount", d.minimum_delegation_amount)
+            .unwrap();
+        args.insert("maximum_delegation_amount", d.maximum_delegation_amount)
+            .unwrap();
         args.insert("reserved_slots", d.reserved_slots).unwrap();
         args
     }
@@ -68,14 +70,14 @@ fn native_add_bid_samples(
                 for minimum_delegation_amount in minimum_delegation_amounts {
                     for maximum_delegation_amount in maximum_delegation_amounts {
                         for reserved_slot in reserved_slots {
-                            let label = format!("native_add_bid_v1");
+                            let label = "native_add_bid_v1".to_string();
                             let bid = AddBid::new(
                                 public_key.clone(),
-                                delegation_rate.clone(),
-                                amount.clone(),
-                                minimum_delegation_amount.clone(),
-                                maximum_delegation_amount.clone(),
-                                reserved_slot.clone()
+                                *delegation_rate,
+                                *amount,
+                                *minimum_delegation_amount,
+                                *maximum_delegation_amount,
+                                *reserved_slot,
                             );
                             let sample = Sample::new(label, bid, true);
                             samples.push(sample);
@@ -135,59 +137,67 @@ pub(crate) fn invalid() -> Vec<Sample<TransactionV1Meta>> {
     let valid_slots = Option::<u32>::None;
 
     let missing_pk = runtime_args! {
-        "amount" => valid_amount.clone(),
-        "delegation_rate" => valid_delegation_rate.clone(),
-        "minimum_delegation_amount" => valid_min.clone(),
-        "maximum_delegation_amount" => valid_max.clone(),
-        "reserved_slots" => valid_slots.clone(),
+        "amount" => valid_amount,
+        "delegation_rate" => valid_delegation_rate,
+        "minimum_delegation_amount" => valid_min,
+        "maximum_delegation_amount" => valid_max,
+        "reserved_slots" => valid_slots,
     };
 
     let missing_amount = runtime_args! {
         "public_key" => valid_pk.clone(),
-        "delegation_rate" => valid_delegation_rate.clone(),
-        "minimum_delegation_amount" => valid_min.clone(),
-        "maximum_delegation_amount" => valid_max.clone(),
-        "reserved_slots" => valid_slots.clone(),
+        "delegation_rate" => valid_delegation_rate,
+        "minimum_delegation_amount" => valid_min,
+        "maximum_delegation_amount" => valid_max,
+        "reserved_slots" => valid_slots,
     };
 
     let missing_delegation_rate = runtime_args! {
         "public_key" => valid_pk.clone(),
-        "amount" => valid_amount.clone(),
-        "minimum_delegation_amount" => valid_min.clone(),
-        "maximum_delegation_amount" => valid_max.clone(),
-        "reserved_slots" => valid_slots.clone(),
+        "amount" => valid_amount,
+        "minimum_delegation_amount" => valid_min,
+        "maximum_delegation_amount" => valid_max,
+        "reserved_slots" => valid_slots,
     };
 
     let missing_minimum_delegation_amount = runtime_args! {
         "public_key" => valid_pk.clone(),
-        "amount" => valid_amount.clone(),
-        "delegation_rate" => valid_delegation_rate.clone(),
-        "maximum_delegation_amount" => valid_max.clone(),
-        "reserved_slots" => valid_slots.clone(),
+        "amount" => valid_amount,
+        "delegation_rate" => valid_delegation_rate,
+        "maximum_delegation_amount" => valid_max,
+        "reserved_slots" => valid_slots,
     };
 
     let missing_maximum_delegation_amount = runtime_args! {
         "public_key" => valid_pk.clone(),
-        "amount" => valid_amount.clone(),
-        "delegation_rate" => valid_delegation_rate.clone(),
-        "minimum_delegation_amount" => valid_min.clone(),
-        "reserved_slots" => valid_slots.clone(),
+        "amount" => valid_amount,
+        "delegation_rate" => valid_delegation_rate,
+        "minimum_delegation_amount" => valid_min,
+        "reserved_slots" => valid_slots,
     };
 
     let missing_reserved_slots = runtime_args! {
         "public_key" => valid_pk.clone(),
-        "amount" => valid_amount.clone(),
-        "delegation_rate" => valid_delegation_rate.clone(),
-        "minimum_delegation_amount" => valid_min.clone(),
-        "maximum_delegation_amount" => valid_max.clone(),
+        "amount" => valid_amount,
+        "delegation_rate" => valid_delegation_rate,
+        "minimum_delegation_amount" => valid_min,
+        "maximum_delegation_amount" => valid_max,
     };
 
     let invalid_args = vec![
         Sample::new("missing_public_key", missing_pk, false),
         Sample::new("missing_amount", missing_amount, false),
         Sample::new("missing_delegation_rate", missing_delegation_rate, false),
-        Sample::new("missing_minimum_delegation_amount", missing_minimum_delegation_amount, false),
-        Sample::new("missing_maximum_delegation_amount", missing_maximum_delegation_amount, false),
+        Sample::new(
+            "missing_minimum_delegation_amount",
+            missing_minimum_delegation_amount,
+            false,
+        ),
+        Sample::new(
+            "missing_maximum_delegation_amount",
+            missing_maximum_delegation_amount,
+            false,
+        ),
         Sample::new("missing_reserved_slots", missing_reserved_slots, true),
     ];
 

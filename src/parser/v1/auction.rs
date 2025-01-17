@@ -1,4 +1,8 @@
-use casper_types::{bytesrepr::{FromBytes, ToBytes}, system::auction::{DelegatorKind, Reservation}, Digest, RuntimeArgs, TransactionArgs};
+use casper_types::{
+    bytesrepr::ToBytes,
+    system::auction::{DelegatorKind, Reservation},
+    Digest, RuntimeArgs, TransactionArgs,
+};
 
 use crate::{
     ledger::Element,
@@ -157,15 +161,33 @@ fn parse_new_public_key(args: &RuntimeArgs) -> Option<Element> {
 }
 
 fn parse_delegation_rate(args: &RuntimeArgs) -> Option<Element> {
-    parse_optional_arg(args, DELEGATION_RATE_KEY_ARG_KEY, "deleg. rate", false, identity)
+    parse_optional_arg(
+        args,
+        DELEGATION_RATE_KEY_ARG_KEY,
+        "deleg. rate",
+        false,
+        identity,
+    )
 }
 
 fn parse_min_delegation_amount(args: &RuntimeArgs) -> Option<Element> {
-    parse_optional_arg(args, MIN_DELEGATION_AMOUNT_KEY_ARG_KEY, "min. amount", false, identity)
+    parse_optional_arg(
+        args,
+        MIN_DELEGATION_AMOUNT_KEY_ARG_KEY,
+        "min. amount",
+        false,
+        identity,
+    )
 }
 
 fn parse_max_delegation_amount(args: &RuntimeArgs) -> Option<Element> {
-    parse_optional_arg(args, MAX_DELEGATION_AMOUNT_KEY_ARG_KEY, "max. amount", false, identity)
+    parse_optional_arg(
+        args,
+        MAX_DELEGATION_AMOUNT_KEY_ARG_KEY,
+        "max. amount",
+        false,
+        identity,
+    )
 }
 
 fn parse_reserved_slots(args: &RuntimeArgs) -> Option<Element> {
@@ -181,7 +203,7 @@ fn parse_reservations(args: &RuntimeArgs) -> Vec<Element> {
     if let Some(key) = args.get(RESERVATIONS_ARG_KEY) {
         let resv_array: Vec<Reservation> = key.to_t().unwrap();
         let length = resv_array.len();
-        let hash = Digest::hash(&resv_array.to_bytes().unwrap());
+        let hash = Digest::hash(resv_array.to_bytes().unwrap());
         elements.push(Element::regular("rsrv len", length.to_string()));
         elements.push(Element::regular("rsrv hash", base16::encode_lower(&hash)));
     }
@@ -193,7 +215,7 @@ fn parse_delegator_kinds(args: &RuntimeArgs) -> Vec<Element> {
     if let Some(key) = args.get(DELEGATORS_ARG_KEY) {
         let delegators_array: Vec<DelegatorKind> = key.to_t().unwrap();
         let length = delegators_array.len();
-        let hash = Digest::hash(&delegators_array.to_bytes().unwrap());
+        let hash = Digest::hash(delegators_array.to_bytes().unwrap());
         elements.push(Element::regular("dlgtrs len", length.to_string()));
         elements.push(Element::regular("dlgtrs hash", base16::encode_lower(&hash)));
     }

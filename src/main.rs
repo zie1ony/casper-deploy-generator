@@ -12,7 +12,13 @@ use ledger::{LimitedLedgerConfig, ZondaxRepr};
 use parser::v1::{ARGS_MAP_KEY, ENTRY_POINT_MAP_KEY, SCHEDULING_MAP_KEY, TARGET_MAP_KEY};
 use sample::Sample;
 use test_data::{
-    deploy_delegate_samples, deploy_generic_samples, deploy_native_transfer_samples, deploy_redelegate_samples, deploy_undelegate_samples, native_activate_bid_samples, native_add_bid_samples, native_add_reservations_samples, native_cancel_reservations_samples, native_change_bid_pk_samples, native_delegate_samples, native_redelegate_samples, native_undelegate_samples, sign_message::{invalid_casper_message_sample, valid_casper_message_sample}, v1_native_transfer_samples
+    deploy_delegate_samples, deploy_generic_samples, deploy_native_transfer_samples,
+    deploy_redelegate_samples, deploy_undelegate_samples, native_activate_bid_samples,
+    native_add_bid_samples, native_add_reservations_samples, native_cancel_reservations_samples,
+    native_change_bid_pk_samples, native_delegate_samples, native_redelegate_samples,
+    native_undelegate_samples,
+    sign_message::{invalid_casper_message_sample, valid_casper_message_sample},
+    v1_native_transfer_samples,
 };
 
 pub mod checksummed_hex;
@@ -119,12 +125,10 @@ fn deploy_to_v1_generic(
         let mut fields: BTreeMap<u16, Bytes> = BTreeMap::new();
         let args = deploy.session().args();
         let args = match &runtime {
-            TransactionRuntimeParams::VmCasperV1 => {
-                TransactionArgs::Named(args.clone())
-            },
+            TransactionRuntimeParams::VmCasperV1 => TransactionArgs::Named(args.clone()),
             TransactionRuntimeParams::VmCasperV2 { .. } => {
                 TransactionArgs::Bytesrepr(args.to_bytes().unwrap().into())
-            },
+            }
         };
         fields.insert(ARGS_MAP_KEY, args.to_bytes().unwrap().into());
         fields.insert(ENTRY_POINT_MAP_KEY, ep.to_bytes().unwrap().into());
@@ -172,7 +176,10 @@ fn generic_samples_v1_vm2(rng: &mut DeterministicTestRng) -> Vec<Sample<Transact
             deploy_to_v1_generic(
                 sample,
                 TransactionEntryPoint::Custom("generic-vm2-ep".into()),
-                TransactionRuntimeParams::VmCasperV2 { transferred_value: 10_000, seed: Some([1u8;32]) },
+                TransactionRuntimeParams::VmCasperV2 {
+                    transferred_value: 10_000,
+                    seed: Some([1u8; 32]),
+                },
                 "_generic_sample_v1_vm2",
             )
             .ok()
