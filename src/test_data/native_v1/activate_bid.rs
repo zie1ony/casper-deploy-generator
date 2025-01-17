@@ -7,7 +7,7 @@ use crate::sample::Sample;
 
 use crate::test_data::TransactionV1Meta;
 
-/// Represents native delegation sample.
+/// Represents native 'activate bid' sample.
 #[derive(Clone, Debug)]
 struct ActivateBid {
     validator_public_key: PublicKey,
@@ -30,7 +30,7 @@ impl From<ActivateBid> for RuntimeArgs {
     }
 }
 
-// Generate a native delegate sample for every possible combination of parameters
+// Generate a native activate bid sample for every possible combination of parameters
 fn native_activate_bid_samples(validator_public_keys: &[PublicKey]) -> Vec<Sample<ActivateBid>> {
     let mut samples: Vec<Sample<ActivateBid>> = vec![];
 
@@ -44,7 +44,7 @@ fn native_activate_bid_samples(validator_public_keys: &[PublicKey]) -> Vec<Sampl
     samples
 }
 
-/// Returns valid native delegate samples.
+/// Returns valid activate bid samples.
 pub(crate) fn valid() -> Vec<Sample<TransactionV1Meta>> {
     let public_keys = vec![
         PublicKey::ed25519_from_bytes([0u8; 32]).unwrap(),
@@ -62,7 +62,7 @@ pub(crate) fn valid() -> Vec<Sample<TransactionV1Meta>> {
     )
 }
 
-/// Returns invalid native transfer samples.
+/// Returns invalid activate bid samples.
 pub(crate) fn invalid() -> Vec<Sample<TransactionV1Meta>> {
     let missing_pk = runtime_args! {};
 

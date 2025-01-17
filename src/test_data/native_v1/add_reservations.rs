@@ -8,7 +8,7 @@ use crate::sample::Sample;
 
 use crate::test_data::TransactionV1Meta;
 
-/// Represents native delegation sample.
+/// Represents native 'add reservations' sample.
 #[derive(Clone, Debug)]
 struct AddReservations {
     reservations: Vec<Reservation>,
@@ -28,7 +28,7 @@ impl From<AddReservations> for RuntimeArgs {
     }
 }
 
-// Generate a native delegate sample for every possible combination of parameters
+// Generate a native add reservations sample for every possible combination of parameters
 fn native_add_reservations_samples(
     delegator_kinds: &[DelegatorKind],
     validator_public_keys: &[PublicKey],
@@ -61,7 +61,7 @@ fn native_add_reservations_samples(
     samples
 }
 
-/// Returns valid native delegate samples.
+/// Returns valid add reservations samples.
 pub(crate) fn valid() -> Vec<Sample<TransactionV1Meta>> {
     let delegator_kinds = vec![
         DelegatorKind::PublicKey(PublicKey::ed25519_from_bytes([6u8; 32]).unwrap()),
@@ -93,7 +93,7 @@ pub(crate) fn valid() -> Vec<Sample<TransactionV1Meta>> {
     )
 }
 
-/// Returns invalid native transfer samples.
+/// Returns invalid add reservations samples.
 pub(crate) fn invalid() -> Vec<Sample<TransactionV1Meta>> {
     let missing_reservations = runtime_args! {};
 

@@ -7,7 +7,7 @@ use crate::sample::Sample;
 
 use crate::test_data::TransactionV1Meta;
 
-/// Represents native delegation sample.
+/// Represents native 'change bid pk' sample.
 #[derive(Clone, Debug)]
 struct ChangeBidPk {
     public_key: PublicKey,
@@ -50,7 +50,7 @@ fn native_change_bid_pk_samples(
     samples
 }
 
-/// Returns valid native delegate samples.
+/// Returns valid native change bid pk samples.
 pub(crate) fn valid() -> Vec<Sample<TransactionV1Meta>> {
     let public_keys = vec![
         PublicKey::ed25519_from_bytes([0u8; 32]).unwrap(),
@@ -74,7 +74,7 @@ pub(crate) fn valid() -> Vec<Sample<TransactionV1Meta>> {
     )
 }
 
-/// Returns invalid native transfer samples.
+/// Returns invalid change bid pk samples.
 pub(crate) fn invalid() -> Vec<Sample<TransactionV1Meta>> {
     let public_key = PublicKey::ed25519_from_bytes([6u8; 32]).unwrap();
     let new_public_key = PublicKey::ed25519_from_bytes([0u8; 32]).unwrap();

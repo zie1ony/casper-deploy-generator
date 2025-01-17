@@ -8,7 +8,7 @@ use crate::sample::Sample;
 
 use crate::test_data::TransactionV1Meta;
 
-/// Represents native delegation sample.
+/// Represents native 'cancel reservations' sample.
 #[derive(Clone, Debug)]
 struct CancelReservations {
     validator: PublicKey,
@@ -52,7 +52,7 @@ fn native_cancel_reservations_samples(
     samples
 }
 
-/// Returns valid native delegate samples.
+/// Returns valid native cancel reservations samples.
 pub(crate) fn valid() -> Vec<Sample<TransactionV1Meta>> {
     let delegator_kinds_1 = vec![
         DelegatorKind::PublicKey(PublicKey::ed25519_from_bytes([6u8; 32]).unwrap()),
@@ -90,7 +90,7 @@ pub(crate) fn valid() -> Vec<Sample<TransactionV1Meta>> {
     )
 }
 
-/// Returns invalid native transfer samples.
+/// Returns invalid cancel reservations samples.
 pub(crate) fn invalid() -> Vec<Sample<TransactionV1Meta>> {
     let validator = PublicKey::ed25519_from_bytes([6u8; 32]).unwrap();
     let delegators = vec![DelegatorKind::Purse([9u8; 32])];

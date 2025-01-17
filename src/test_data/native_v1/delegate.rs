@@ -86,7 +86,7 @@ pub(crate) fn valid() -> Vec<Sample<TransactionV1Meta>> {
     )
 }
 
-/// Returns invalid native transfer samples.
+/// Returns invalid native delegate samples.
 pub(crate) fn invalid() -> Vec<Sample<TransactionV1Meta>> {
     let valid_validator = PublicKey::ed25519_from_bytes([0u8; 32]).unwrap();
     let valid_delegator = PublicKey::ed25519_from_bytes([9u8; 32]).unwrap();

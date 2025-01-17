@@ -7,7 +7,7 @@ use crate::sample::Sample;
 
 use crate::test_data::TransactionV1Meta;
 
-/// Represents native delegation sample.
+/// Represents native 'add bid' sample.
 #[derive(Clone, Debug)]
 struct AddBid {
     public_key: PublicKey,
@@ -53,7 +53,7 @@ impl From<AddBid> for RuntimeArgs {
     }
 }
 
-// Generate a native delegate sample for every possible combination of parameters
+// Generate a native add bid sample for every possible combination of parameters
 fn native_add_bid_samples(
     amounts: &[U512],
     public_keys: &[PublicKey],
@@ -91,7 +91,7 @@ fn native_add_bid_samples(
     samples
 }
 
-/// Returns valid native delegate samples.
+/// Returns valid native add bid samples.
 pub(crate) fn valid() -> Vec<Sample<TransactionV1Meta>> {
     let amount_min = U512::from(0u8);
     let amount_mid = U512::from(100000000);

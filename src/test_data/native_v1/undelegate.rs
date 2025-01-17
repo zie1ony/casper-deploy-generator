@@ -7,7 +7,7 @@ use crate::sample::Sample;
 
 use crate::test_data::TransactionV1Meta;
 
-/// Represents native delegation sample.
+/// Represents native undelegation sample.
 #[derive(Clone, Debug)]
 struct NativeUndelegate {
     delegator: PublicKey,
@@ -35,7 +35,7 @@ impl From<NativeUndelegate> for RuntimeArgs {
     }
 }
 
-// Generate a native delegate sample for every possible combination of parameters
+// Generate a native undelegate sample for every possible combination of parameters
 fn native_undelegate_samples(
     amounts: &[U512],
     validators: &[PublicKey],
@@ -57,7 +57,7 @@ fn native_undelegate_samples(
     samples
 }
 
-/// Returns valid native delegate samples.
+/// Returns valid native undelegate samples.
 pub(crate) fn valid() -> Vec<Sample<TransactionV1Meta>> {
     let amount_min = U512::from(0u8);
     let amount_mid = U512::from(100000000);
@@ -90,7 +90,7 @@ pub(crate) fn valid() -> Vec<Sample<TransactionV1Meta>> {
     )
 }
 
-/// Returns invalid native transfer samples.
+/// Returns invalid native undelegate samples.
 pub(crate) fn invalid() -> Vec<Sample<TransactionV1Meta>> {
     let valid_validator = PublicKey::ed25519_from_bytes([0u8; 32]).unwrap();
     let valid_delegator = PublicKey::ed25519_from_bytes([9u8; 32]).unwrap();
