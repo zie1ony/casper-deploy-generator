@@ -125,8 +125,14 @@ fn make_v1_sample(
         fields,
     );
 
+    let hash = Digest::hash(
+        payload
+            .to_bytes()
+            .unwrap_or_else(|error| panic!("should serialize body: {}", error)),
+    );
+
     let mut transaction_v1 =
-        TransactionV1::new(Digest::hash([1u8; 32]).into(), payload, BTreeSet::new());
+        TransactionV1::new(hash.into(), payload, BTreeSet::new());
 
     transaction_v1.sign(&main_key[0]);
 
@@ -398,6 +404,14 @@ pub(crate) fn native_cancel_reservations_samples<R: Rng>(rng: &mut R) -> Vec<Sam
         rng,
         native_v1::cancel_reservations::valid,
         native_v1::cancel_reservations::invalid,
+    )
+}
+
+pub(crate) fn native_withdraw_bid_samples<R: Rng>(rng: &mut R) -> Vec<Sample<Transaction>> {
+    native_samples(
+        rng,
+        native_v1::withdraw_bid::valid,
+        native_v1::withdraw_bid::invalid,
     )
 }
 

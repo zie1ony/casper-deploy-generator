@@ -85,6 +85,16 @@ pub(crate) fn parse_add_bid(item: &TransactionV1Meta) -> Vec<Element> {
     parse_auction_v1(item, arg_parser)
 }
 
+pub(crate) fn parse_withdraw_bid(item: &TransactionV1Meta) -> Vec<Element> {
+    let arg_parser = |args| {
+        let mut elements = vec![];
+        elements.extend(parse_public_key(args));
+        elements.extend(parse_amount(args));
+        elements
+    };
+    parse_auction_v1(item, arg_parser)
+}
+
 pub(crate) fn parse_activate_bid(item: &TransactionV1Meta) -> Vec<Element> {
     let arg_parser = |args| {
         let mut elements = vec![];

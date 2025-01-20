@@ -1,24 +1,14 @@
 use std::{collections::BTreeMap, convert::TryInto};
 
 use casper_types::{
-    bytesrepr::{Bytes, ToBytes},
-    ExecutableDeployItem, InitiatorAddr, PricingMode, Transaction, TransactionArgs,
-    TransactionEntryPoint, TransactionInvocationTarget, TransactionRuntimeParams,
-    TransactionScheduling, TransactionTarget, TransactionV1, TransactionV1Hash,
-    TransactionV1Payload, U512,
+    bytesrepr::{Bytes, ToBytes}, Digest, ExecutableDeployItem, InitiatorAddr, PricingMode, Transaction, TransactionArgs, TransactionEntryPoint, TransactionInvocationTarget, TransactionRuntimeParams, TransactionScheduling, TransactionTarget, TransactionV1, TransactionV1Payload, U512
 };
 use deterministic::DeterministicTestRng;
 use ledger::{LimitedLedgerConfig, ZondaxRepr};
 use parser::v1::{ARGS_MAP_KEY, ENTRY_POINT_MAP_KEY, SCHEDULING_MAP_KEY, TARGET_MAP_KEY};
 use sample::Sample;
 use test_data::{
-    deploy_delegate_samples, deploy_generic_samples, deploy_native_transfer_samples,
-    deploy_redelegate_samples, deploy_undelegate_samples, native_activate_bid_samples,
-    native_add_bid_samples, native_add_reservations_samples, native_cancel_reservations_samples,
-    native_change_bid_pk_samples, native_delegate_samples, native_redelegate_samples,
-    native_undelegate_samples,
-    sign_message::{invalid_casper_message_sample, valid_casper_message_sample},
-    v1_native_transfer_samples,
+    deploy_delegate_samples, deploy_generic_samples, deploy_native_transfer_samples, deploy_redelegate_samples, deploy_undelegate_samples, native_activate_bid_samples, native_add_bid_samples, native_add_reservations_samples, native_cancel_reservations_samples, native_change_bid_pk_samples, native_delegate_samples, native_redelegate_samples, native_undelegate_samples, native_withdraw_bid_samples, sign_message::{invalid_casper_message_sample, valid_casper_message_sample}, v1_native_transfer_samples
 };
 
 pub mod checksummed_hex;
@@ -83,7 +73,6 @@ fn deploy_to_v1_generic(
     };
 
     let initiator_addr = InitiatorAddr::AccountHash(deploy.account().clone().to_account_hash());
-    let hash = TransactionV1Hash::new(*deploy.hash().inner());
 
     let target = match deploy.session() {
         ExecutableDeployItem::ModuleBytes { module_bytes, .. } => TransactionTarget::Session {
@@ -146,7 +135,12 @@ fn deploy_to_v1_generic(
         fields,
     );
 
-    let transaction_v1 = TransactionV1::new(hash, payload, approvals);
+    let hash = Digest::hash(
+        payload
+            .to_bytes()
+            .unwrap_or_else(|error| panic!("should serialize body: {}", error)),
+    );
+    let transaction_v1 = TransactionV1::new(hash.into(), payload, approvals);
     let transaction = Transaction::V1(transaction_v1);
 
     label.push_str(new_suffix);
@@ -197,6 +191,7 @@ fn transaction_v1s() -> impl Iterator<Item = Sample<Transaction>> {
         .chain(native_undelegate_samples(&mut rng))
         .chain(native_redelegate_samples(&mut rng))
         .chain(native_add_bid_samples(&mut rng))
+        .chain(native_withdraw_bid_samples(&mut rng))
         .chain(native_activate_bid_samples(&mut rng))
         .chain(native_change_bid_pk_samples(&mut rng))
         .chain(native_add_reservations_samples(&mut rng))

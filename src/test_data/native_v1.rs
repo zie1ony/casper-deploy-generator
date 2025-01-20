@@ -7,6 +7,7 @@ use super::{Sample, TransactionV1Meta};
 
 pub mod activate_bid;
 pub mod add_bid;
+pub mod withdraw_bid;
 pub mod add_reservations;
 pub mod cancel_reservations;
 pub mod change_bid_pk;

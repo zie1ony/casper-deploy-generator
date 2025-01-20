@@ -13,7 +13,7 @@ use crate::{
 
 use auction::{
     parse_activate_bid, parse_add_bid, parse_add_reservations, parse_cancel_reservations,
-    parse_change_bid_pk, parse_delegation, parse_redelegation, parse_undelegation,
+    parse_change_bid_pk, parse_delegation, parse_redelegation, parse_undelegation, parse_withdraw_bid,
 };
 use casper_types::{
     bytesrepr::Bytes,
@@ -138,6 +138,7 @@ pub(crate) fn parse_v1_meta(v1: &TransactionV1) -> Vec<Element> {
             TransactionEntryPoint::Undelegate => parse_undelegation(&meta),
             TransactionEntryPoint::Redelegate => parse_redelegation(&meta),
             TransactionEntryPoint::AddBid => parse_add_bid(&meta),
+            TransactionEntryPoint::WithdrawBid => parse_withdraw_bid(&meta),
             TransactionEntryPoint::ActivateBid => parse_activate_bid(&meta),
             TransactionEntryPoint::ChangeBidPublicKey => parse_change_bid_pk(&meta),
             TransactionEntryPoint::AddReservations => parse_add_reservations(&meta),

@@ -72,8 +72,8 @@ fn transaction_v1_type(t: &TransactionV1) -> Element {
         TransactionEntryPoint::Redelegate => "Redelegate",
         TransactionEntryPoint::ActivateBid => "Activate Bid",
         TransactionEntryPoint::ChangeBidPublicKey => "Change Bid PK",
-        TransactionEntryPoint::AddReservations => "Add Reservation",
-        TransactionEntryPoint::CancelReservations => "Cancel Reservation",
+        TransactionEntryPoint::AddReservations => "Add Reservations",
+        TransactionEntryPoint::CancelReservations => "Cancel Reservations",
     };
 
     Element::regular("Type", v1_type.to_string())
