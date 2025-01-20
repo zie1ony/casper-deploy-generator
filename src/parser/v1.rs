@@ -13,7 +13,8 @@ use crate::{
 
 use auction::{
     parse_activate_bid, parse_add_bid, parse_add_reservations, parse_cancel_reservations,
-    parse_change_bid_pk, parse_delegation, parse_redelegation, parse_undelegation, parse_withdraw_bid,
+    parse_change_bid_pk, parse_delegation, parse_redelegation, parse_undelegation,
+    parse_withdraw_bid,
 };
 use casper_types::{
     bytesrepr::Bytes,

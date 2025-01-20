@@ -15,14 +15,8 @@ struct WithdrawBid {
 }
 
 impl WithdrawBid {
-    pub fn new(
-        public_key: PublicKey,
-        amount: U512,
-    ) -> Self {
-        Self {
-            public_key,
-            amount,
-        }
+    pub fn new(public_key: PublicKey, amount: U512) -> Self {
+        Self { public_key, amount }
     }
 }
 
@@ -45,10 +39,7 @@ fn native_withdraw_bid_samples(
     for amount in amounts {
         for public_key in public_keys {
             let label = "native_withdraw_bid_v1".to_string();
-            let bid = WithdrawBid::new(
-                public_key.clone(),
-                *amount,
-            );
+            let bid = WithdrawBid::new(public_key.clone(), *amount);
             let sample = Sample::new(label, bid, true);
             samples.push(sample);
         }
@@ -75,10 +66,7 @@ pub(crate) fn valid() -> Vec<Sample<TransactionV1Meta>> {
     ];
 
     super::make_samples_with_schedulings(
-        native_withdraw_bid_samples(
-            &amounts,
-            &public_keys,
-        ),
+        native_withdraw_bid_samples(&amounts, &public_keys),
         TransactionEntryPoint::WithdrawBid,
     )
 }

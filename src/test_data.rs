@@ -131,8 +131,7 @@ fn make_v1_sample(
             .unwrap_or_else(|error| panic!("should serialize body: {}", error)),
     );
 
-    let mut transaction_v1 =
-        TransactionV1::new(hash.into(), payload, BTreeSet::new());
+    let mut transaction_v1 = TransactionV1::new(hash.into(), payload, BTreeSet::new());
 
     transaction_v1.sign(&main_key[0]);
 

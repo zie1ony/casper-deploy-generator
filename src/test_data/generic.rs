@@ -426,7 +426,7 @@ fn sample_keys() -> Vec<Key> {
         TopicNameHash::new([1u8; 32]),
         1,
     ));
-    
+
     let system_registry_key = Key::SystemEntityRegistry;
     let chainspec_registry_key = Key::ChainspecRegistry;
     let checksum_registry_key = Key::ChecksumRegistry;

@@ -7,7 +7,6 @@ use super::{Sample, TransactionV1Meta};
 
 pub mod activate_bid;
 pub mod add_bid;
-pub mod withdraw_bid;
 pub mod add_reservations;
 pub mod cancel_reservations;
 pub mod change_bid_pk;
@@ -15,6 +14,7 @@ pub mod delegate;
 pub mod redelegate;
 pub mod transfer;
 pub mod undelegate;
+pub mod withdraw_bid;
 
 pub(crate) fn make_samples_with_schedulings<T: Into<RuntimeArgs> + Clone>(
     from_samples: Vec<Sample<T>>,
