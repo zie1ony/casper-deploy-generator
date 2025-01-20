@@ -1,20 +1,34 @@
 use crate::ledger::{Element, TxnPhase};
 use crate::utils::cl_value_to_string;
-use casper_types::bytesrepr::ToBytes;
-use casper_types::system::mint::{ARG_ID, ARG_SOURCE, ARG_TARGET, ARG_TO};
-use casper_types::RuntimeArgs;
+use casper_types::bytesrepr::{Bytes, ToBytes};
+use casper_types::system::mint::{self, ARG_ID, ARG_SOURCE, ARG_TARGET, ARG_TO};
+use casper_types::{Digest, RuntimeArgs, U512};
+use thousands::Separable;
 
-use super::deploy::{identity, parse_amount};
+pub(crate) fn parse_runtime_args_v1(ra: &RuntimeArgs) -> Vec<Element> {
+    let mut elements: Vec<Element> = vec![];
+    if !ra.is_empty() {
+        let args_digest = Digest::hash(ToBytes::to_bytes(ra).expect("ToBytes to work."));
+        let args_hash = base16::encode_lower(&args_digest);
+        elements.push(Element::regular("args hash", args_hash));
+    }
+    elements
+}
 
-/// Parses all contract arguments into a form:
-/// arg-n-name: <name>
-/// arg-n-val: <val>
-/// where n is the ordinal number of the argument.
+pub(crate) fn parse_bytesrepr_args(bytes: Bytes) -> Vec<Element> {
+    let mut elements: Vec<Element> = vec![];
+    if !bytes.is_empty() {
+        let args_digest = Digest::hash(bytes);
+        let args_hash = base16::encode_lower(&args_digest);
+        elements.push(Element::regular("args hash", args_hash));
+    }
+    elements
+}
+
 pub(crate) fn parse_runtime_args(phase: &TxnPhase, ra: &RuntimeArgs) -> Vec<Element> {
     let mut elements: Vec<Element> = vec![];
     if !ra.is_empty() {
-        let args_digest =
-            casper_hashing::Digest::hash(ToBytes::to_bytes(ra).expect("ToBytes to work."));
+        let args_digest = Digest::hash(ToBytes::to_bytes(ra).expect("ToBytes to work."));
         let args_hash = base16::encode_lower(&args_digest);
         elements.push(Element::regular(
             "args hash",
@@ -22,21 +36,6 @@ pub(crate) fn parse_runtime_args(phase: &TxnPhase, ra: &RuntimeArgs) -> Vec<Elem
         ));
     }
 
-    // NOTE: The code that follows would iterate over all args and parse them
-    // for Ledger presentation in a following format:
-    // Arg-n-name: <name>
-    // Arg-n-val: <value>
-    // But this could lead to very long confirmation screens in Ledger,
-    // so we opted for shorter form above: display just hash of the runtime args.
-    // If we ever decide to bring back the more elaborate version, this code would do it.
-    // let named_args: BTreeMap<String, CLValue> = ra.clone().into();
-    // for (idx, (name, value)) in named_args.iter().enumerate() {
-    //     let name_label = format!("arg-{}-name", idx);
-    //     elements.push(Element::expert(&name_label, name.to_string()));
-    //     let value_label = format!("arg-{}-val", idx);
-    //     let value_str = cl_value_to_string(value);
-    //     elements.push(Element::expert(&value_label, value_str));
-    // }
     elements
 }
 
@@ -62,11 +61,12 @@ pub(crate) fn parse_optional_arg<F: Fn(String) -> String>(
 }
 
 /// Required fields for transfer are:
+/// * source
 /// * target
 /// * amount
-/// * ID
 /// Optional fields:
-/// * source
+/// * to (Option<AccountHash>)
+/// * ID
 pub(crate) fn parse_transfer_args(args: &RuntimeArgs) -> Vec<Element> {
     let mut elements: Vec<Element> = parse_optional_arg(args, ARG_TO, "recipient", false, identity)
         .into_iter()
@@ -78,4 +78,28 @@ pub(crate) fn parse_transfer_args(args: &RuntimeArgs) -> Vec<Element> {
     elements.extend(parse_amount(args));
     elements.extend(parse_optional_arg(args, ARG_ID, "ID", true, identity));
     elements
+}
+
+pub(crate) fn parse_fee(args: &RuntimeArgs) -> Option<Element> {
+    parse_motes(args, "fee")
+}
+
+pub(crate) fn parse_amount(args: &RuntimeArgs) -> Option<Element> {
+    parse_motes(args, "amount")
+}
+
+fn parse_motes(args: &RuntimeArgs, ledger_label: &str) -> Option<Element> {
+    let f = |amount_str: String| {
+        let motes_amount = U512::from_dec_str(&amount_str).unwrap();
+        format_amount(motes_amount)
+    };
+    parse_optional_arg(args, mint::ARG_AMOUNT, ledger_label, false, f)
+}
+
+pub(crate) fn format_amount(motes: U512) -> String {
+    format!("{} motes", motes.separate_with_spaces())
+}
+
+pub(crate) fn identity<T>(el: T) -> T {
+    el
 }

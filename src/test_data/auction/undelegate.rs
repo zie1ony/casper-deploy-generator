@@ -11,8 +11,7 @@
 //! | `amount` | `U512` |
 
 use crate::sample::Sample;
-use casper_execution_engine::core::engine_state::ExecutableDeployItem;
-use casper_types::{AsymmetricType, PublicKey, RuntimeArgs, U512};
+use casper_types::{AsymmetricType, ExecutableDeployItem, PublicKey, RuntimeArgs, U512};
 
 use super::commons::invalid_delegation;
 

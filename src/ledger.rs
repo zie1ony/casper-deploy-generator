@@ -1,7 +1,6 @@
 use std::{fmt::Display, rc::Rc};
 
-use casper_node::types::Deploy;
-use casper_types::bytesrepr::ToBytes;
+use casper_types::{bytesrepr::ToBytes, Deploy, Transaction, TransactionV1};
 
 use serde::{Deserialize, Serialize};
 
@@ -87,6 +86,19 @@ struct Ledger {
 }
 
 impl Ledger {
+    fn from_transaction(transaction: Transaction) -> Self {
+        match transaction {
+            Transaction::Deploy(deploy) => Self::from_deploy(deploy),
+            Transaction::V1(v1) => Self::from_v1(v1),
+        }
+    }
+
+    fn from_v1(v1: TransactionV1) -> Self {
+        Ledger {
+            ledger_elements: parser::parse_v1(v1),
+        }
+    }
+
     fn from_deploy(deploy: Deploy) -> Self {
         Ledger {
             ledger_elements: parser::parse_deploy(deploy),
@@ -325,6 +337,29 @@ pub(super) fn deploy_to_json(
     let (name, deploy, valid) = sample_deploy.destructure();
     let blob = hex::encode(deploy.to_bytes().unwrap());
     let ledger = Ledger::from_deploy(deploy);
+    let ledger_view = LimitedLedgerView::new(config, ledger);
+    let output = ledger_view.regular();
+    let output_expert = ledger_view.expert();
+    ZondaxRepr {
+        index,
+        name,
+        valid_regular: valid,
+        valid_expert: valid,
+        testnet: true,
+        blob,
+        output,
+        output_expert,
+    }
+}
+
+pub(super) fn transaction_to_json(
+    index: usize,
+    sample_deploy: Sample<Transaction>,
+    config: &LimitedLedgerConfig,
+) -> ZondaxRepr {
+    let (name, transaction, valid) = sample_deploy.destructure();
+    let blob = hex::encode(transaction.to_bytes().unwrap());
+    let ledger = Ledger::from_transaction(transaction);
     let ledger_view = LimitedLedgerView::new(config, ledger);
     let output = ledger_view.regular();
     let output_expert = ledger_view.expert();

@@ -1,27 +1,25 @@
+pub(crate) mod auction;
+
 use std::collections::BTreeMap;
 
 use crate::{
     ledger::{Element, TxnPhase},
-    parser::{runtime_args::parse_optional_arg, utils::timestamp_to_seconds_res},
+    parser::utils::timestamp_to_seconds_res,
     utils::parse_public_key,
 };
-use casper_execution_engine::core::engine_state::ExecutableDeployItem;
-use casper_hashing::Digest;
-use casper_node::types::{Deploy, DeployHeader};
+
 use casper_types::{
     bytesrepr::Bytes,
     system::mint::{self, ARG_ID, ARG_SOURCE, ARG_TARGET, ARG_TO},
-    CLValue, RuntimeArgs, U512,
+    CLValue, Deploy, DeployHeader, Digest, ExecutableDeployItem, RuntimeArgs,
 };
-use thousands::Separable;
 
-use super::{
-    auction::{
-        is_delegate, is_redelegate, is_undelegate, parse_delegation, parse_redelegation,
-        parse_undelegation,
-    },
-    runtime_args::{parse_runtime_args, parse_transfer_args},
+use auction::{
+    is_delegate, is_redelegate, is_undelegate, parse_delegation, parse_redelegation,
+    parse_undelegation,
 };
+
+use super::runtime_args::{parse_amount, parse_fee, parse_runtime_args, parse_transfer_args};
 
 pub(crate) fn parse_deploy_header(dh: &DeployHeader) -> Vec<Element> {
     let mut elements = vec![];
@@ -210,31 +208,23 @@ fn remove_transfer_args(args: RuntimeArgs) -> RuntimeArgs {
     tree.into()
 }
 
-fn format_amount(motes: U512) -> String {
-    format!("{} motes", motes.separate_with_spaces())
+pub(crate) fn parse_approvals(d: &Deploy) -> Vec<Element> {
+    let approvals_count = d.approvals().len();
+    vec![Element::expert(
+        "Approvals #",
+        format!("{}", approvals_count),
+    )]
 }
 
-pub(crate) fn parse_fee(args: &RuntimeArgs) -> Option<Element> {
-    parse_motes(args, "fee")
-}
-
-pub(crate) fn parse_amount(args: &RuntimeArgs) -> Option<Element> {
-    parse_motes(args, "amount")
-}
-
-fn parse_motes(args: &RuntimeArgs, ledger_label: &str) -> Option<Element> {
-    let f = |amount_str: String| {
-        let motes_amount = U512::from_dec_str(&amount_str).unwrap();
-        format_amount(motes_amount)
-    };
-    parse_optional_arg(args, mint::ARG_AMOUNT, ledger_label, false, f)
+fn entrypoint(entry_point: &str) -> Element {
+    Element::expert("entry-point", entry_point.to_string())
 }
 
 #[cfg(test)]
 mod amount {
     use casper_types::U512;
 
-    use crate::parser::deploy::format_amount;
+    use crate::parser::runtime_args::format_amount;
 
     #[test]
     fn amount_space_separated() {
@@ -251,20 +241,4 @@ mod amount {
         let expected = "10 000 000 000 motes".to_string();
         assert_eq!(expected, format_amount(ten_billion));
     }
-}
-
-pub(crate) fn identity<T>(el: T) -> T {
-    el
-}
-
-pub(crate) fn parse_approvals(d: &Deploy) -> Vec<Element> {
-    let approvals_count = d.approvals().len();
-    vec![Element::expert(
-        "Approvals #",
-        format!("{}", approvals_count),
-    )]
-}
-
-fn entrypoint(entry_point: &str) -> Element {
-    Element::expert("entry-point", entry_point.to_string())
 }

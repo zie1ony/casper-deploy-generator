@@ -1,6 +1,6 @@
-use casper_types::{blake2b, BLAKE2B_DIGEST_LENGTH};
+use crate::utils::{blake2b, DIGEST_LENGTH};
 
-/// It became a de-facto standard in Casper network that messsages for signing
+/// It became a de-facto standard in Casper network that messages for signing
 /// are prepended with the following prefix.
 const MSG_PREFIX: &str = "Casper Message:\n";
 
@@ -30,7 +30,7 @@ impl CasperMessage {
     }
 
     /// Returns blake2b hash of the underlying bytes.
-    pub(crate) fn hashed(&self) -> [u8; BLAKE2B_DIGEST_LENGTH] {
+    pub(crate) fn hashed(&self) -> [u8; DIGEST_LENGTH] {
         blake2b(&self.0)
     }
 }

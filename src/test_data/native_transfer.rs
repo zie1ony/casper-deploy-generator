@@ -1,13 +1,151 @@
-use casper_execution_engine::core::engine_state::ExecutableDeployItem;
-use casper_types::{runtime_args, AccessRights, RuntimeArgs, URef, U512};
+use casper_types::{
+    account::AccountHash, runtime_args, AccessRights, AsymmetricType, CLValue,
+    ExecutableDeployItem, Key, PublicKey, RuntimeArgs, URef, U512,
+};
 
-use crate::{sample::Sample, test_data::TransferTarget};
+use crate::sample::Sample;
 
-use super::{commons::UREF_ADDR, NativeTransfer, TransferSource};
+use super::commons::UREF_ADDR;
+
+/// Represents native transfer sample.
+#[derive(Clone, Debug)]
+pub(crate) struct NativeTransfer {
+    target: TransferTarget,
+    amount: U512,
+    id: u64,
+    source: TransferSource,
+}
+
+impl NativeTransfer {
+    pub fn new(target: TransferTarget, amount: U512, id: u64, source: TransferSource) -> Self {
+        NativeTransfer {
+            target,
+            amount,
+            id,
+            source,
+        }
+    }
+}
+
+impl From<NativeTransfer> for RuntimeArgs {
+    fn from(nt: NativeTransfer) -> Self {
+        let mut ra = RuntimeArgs::new();
+        ra.insert("amount", nt.amount).unwrap();
+        ra.insert("id", Some(nt.id)).unwrap();
+        if let TransferSource::URef(uref) = nt.source {
+            ra.insert("source", uref).unwrap();
+        }
+        ra.insert_cl_value("target", nt.target.into_cl());
+        ra
+    }
+}
+
+#[derive(Clone, Debug)]
+pub(crate) enum TransferSource {
+    // Transfer source is account's main purse.
+    None,
+    // Transfer source is a defined purse.
+    URef(URef),
+}
+
+impl TransferSource {
+    pub fn uref(uref: URef) -> Self {
+        TransferSource::URef(uref)
+    }
+
+    pub fn none() -> Self {
+        TransferSource::None
+    }
+
+    pub fn label(&self) -> &str {
+        match self {
+            TransferSource::None => "source_none",
+            TransferSource::URef(_) => "source_uref",
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub(crate) enum TransferTarget {
+    // raw bytes representing account hash
+    Bytes([u8; 32]),
+    // transfer to a specific purse
+    URef(URef),
+    // transfer to an account.
+    Key(Key),
+    // transfer to public key
+    PublicKey(PublicKey),
+}
+
+impl TransferTarget {
+    pub fn into_cl(self) -> CLValue {
+        let cl_value_res = match self {
+            TransferTarget::Bytes(bytes) => CLValue::from_t(bytes),
+            TransferTarget::URef(uref) => CLValue::from_t(uref),
+            TransferTarget::Key(key) => CLValue::from_t(key),
+            TransferTarget::PublicKey(pk) => CLValue::from_t(pk),
+        };
+        cl_value_res.unwrap()
+    }
+
+    pub fn bytes() -> TransferTarget {
+        TransferTarget::Bytes([255u8; 32])
+    }
+
+    pub fn uref() -> TransferTarget {
+        let uref = URef::new(UREF_ADDR, AccessRights::READ_ADD_WRITE);
+        TransferTarget::URef(uref)
+    }
+
+    pub fn key() -> TransferTarget {
+        let account_key = Key::Account(
+            AccountHash::from_formatted_str(
+                "account-hash-45f3aa6ce2a450dd5a4f2cc4cc9054aded66de6b6cfc4ad977e7251cf94b649b",
+            )
+            .unwrap(),
+        );
+        TransferTarget::Key(account_key)
+    }
+
+    pub fn public_key_ed25519() -> TransferTarget {
+        let public_key = PublicKey::ed25519_from_bytes(
+            hex::decode(b"2bac1d0ff9240ff0b7b06d555815640497861619ca12583ddef434885416e69b")
+                .unwrap(),
+        )
+        .unwrap();
+        TransferTarget::PublicKey(public_key)
+    }
+
+    pub fn public_key_secp256k1() -> TransferTarget {
+        let public_key = PublicKey::secp256k1_from_bytes(
+            hex::decode(b"026e1b7a8e3243f5ff14e825b0fde15103588bb61e6ae99084968b017118e0504f")
+                .unwrap(),
+        )
+        .unwrap();
+        TransferTarget::PublicKey(public_key)
+    }
+
+    pub fn label(&self) -> String {
+        match self {
+            TransferTarget::Bytes(_) => "target_bytes".to_string(),
+            TransferTarget::URef(_) => "target_uref".to_string(),
+            TransferTarget::Key(_) => "target_key_account".to_string(),
+            TransferTarget::PublicKey(pk) => {
+                let variant = match pk {
+                    PublicKey::Ed25519(_) => "ed25519",
+                    PublicKey::Secp256k1(_) => "secp256k1",
+                    PublicKey::System => panic!("unexpected key type variant"),
+                    _ => panic!("Should not happen"),
+                };
+                format!("target_{}_public_key", variant)
+            }
+        }
+    }
+}
 
 /// Given collection of native target inputs,
 /// for every combination of them creates a `NativeTransfer` sample.
-fn native_transfer_samples(
+pub(crate) fn native_transfer_samples(
     amounts: &[U512],
     transfer_id: &[u64],
     targets: &[TransferTarget],
@@ -108,7 +246,7 @@ pub(super) fn invalid() -> Vec<Sample<ExecutableDeployItem>> {
     invalid_transfer_args
         .into_iter()
         .map(|sample_ra| {
-            let (label, ra, validity) = sample_ra.destructure(); // TODO
+            let (label, ra, validity) = sample_ra.destructure();
             let sample_invalid_transfer = ExecutableDeployItem::Transfer { args: ra };
             let new_label = format!("native_transfer_{}", label);
             Sample::new(new_label, sample_invalid_transfer, validity)
